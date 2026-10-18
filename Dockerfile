@@ -1,17 +1,20 @@
-# Development Dockerfile
-FROM node:18-alpine
+# Development & Multi-Stage Base Dockerfile
+FROM node:20-alpine AS base
 
 WORKDIR /app
 
-# Install dependencies first (for caching)
-COPY package*.json ./
-RUN npm install
+# Stage 1: Install dependencies with caching
+FROM base AS deps
+COPY package.json package-lock.json ./
+RUN npm ci --ignore-scripts
 
-# Copy the rest of the application
+# Stage 2: Development runner
+FROM base AS development
+ENV NODE_ENV=development
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Expose the port Vite runs on
 EXPOSE 5173
 
-# Run the development server with host mapping
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

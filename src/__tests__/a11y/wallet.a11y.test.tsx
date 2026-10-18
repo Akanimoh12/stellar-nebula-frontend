@@ -9,7 +9,9 @@ expect.extend(toHaveNoViolations)
 HTMLDialogElement.prototype.showModal = vi.fn()
 HTMLDialogElement.prototype.close = vi.fn()
 
-vi.mock('@services/wallets', () => ({
+vi.mock('@services/wallets', async () => ({
+  // Complete mock so a newly added wallet export cannot break this suite.
+  ...(await (await import('@/test/mocks/walletServices')).createWalletServicesMock()),
   isFreighterInstalled: vi.fn().mockResolvedValue(true),
   isLedgerAvailable: vi.fn().mockResolvedValue(false),
   connectLedger: vi.fn(),

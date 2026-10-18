@@ -9,11 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { get, post } from '../api'
 import { __resetApiCacheForTests, parseCacheControl, cacheKeyFor } from '@/utils/apiCache'
 
-function jsonResponse(
-  status = 200,
-  body: unknown = { ok: true },
-  cacheControl?: string
-): Response {
+function jsonResponse(status = 200, body: unknown = { ok: true }, cacheControl?: string): Response {
   const headers = new Headers({ 'content-type': 'application/json' })
   if (cacheControl) headers.set('cache-control', cacheControl)
   return new Response(JSON.stringify(body), { status, headers })
@@ -66,7 +62,7 @@ describe('api GET caching (Issue #307)', () => {
   it('serves a repeated GET from cache without a second network call', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse(200, { ships: ['a'] }, 'max-age=60'))
+      .mockImplementation(async () => jsonResponse(200, { ships: ['a'] }, 'max-age=60'))
 
     const first = await get<{ ships: string[] }>('/ships')
     const second = await get<{ ships: string[] }>('/ships')
@@ -78,7 +74,7 @@ describe('api GET caching (Issue #307)', () => {
   it('does not cache a no-store response', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse(200, { ships: [] }, 'no-store'))
+      .mockImplementation(async () => jsonResponse(200, { ships: [] }, 'no-store'))
 
     await get('/ships')
     await get('/ships')
@@ -89,7 +85,7 @@ describe('api GET caching (Issue #307)', () => {
   it('does not cache error responses', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse(500, { message: 'boom' }, 'max-age=60'))
+      .mockImplementation(async () => jsonResponse(500, { message: 'boom' }, 'max-age=60'))
 
     await get('/ships')
     await get('/ships')
@@ -100,7 +96,7 @@ describe('api GET caching (Issue #307)', () => {
   it('treats different query strings as different entries', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse(200, { ok: true }, 'max-age=60'))
+      .mockImplementation(async () => jsonResponse(200, { ok: true }, 'max-age=60'))
 
     await get('/ships?owner=alice')
     await get('/ships?owner=bob')
@@ -111,7 +107,7 @@ describe('api GET caching (Issue #307)', () => {
   it('bypasses the cache when cache:false is passed', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse(200, { ok: true }, 'max-age=60'))
+      .mockImplementation(async () => jsonResponse(200, { ok: true }, 'max-age=60'))
 
     await get('/ships')
     await get('/ships', { cache: false })
@@ -122,7 +118,7 @@ describe('api GET caching (Issue #307)', () => {
   it('invalidates related reads after a successful mutation', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse(200, { ok: true }, 'max-age=60'))
+      .mockImplementation(async () => jsonResponse(200, { ok: true }, 'max-age=60'))
 
     await get('/ships') // cached
     await post('/ships/1', { name: 'nebula' }) // invalidates /ships + /ships/1
@@ -134,7 +130,7 @@ describe('api GET caching (Issue #307)', () => {
   it('never serves a cached response to a mutation', async () => {
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(jsonResponse(200, { ok: true }, 'max-age=60'))
+      .mockImplementation(async () => jsonResponse(200, { ok: true }, 'max-age=60'))
 
     await post('/ships', { name: 'a' })
     await post('/ships', { name: 'b' })

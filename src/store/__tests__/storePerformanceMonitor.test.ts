@@ -48,15 +48,16 @@ describe('StorePerformanceMonitor', () => {
   it('tracks update count via middleware', () => {
     const monitor = createPerformanceMonitor({ storeName: 'test' })
 
-    const mockCreator = vi.fn((set: any) => ({
+    type SetState = (partial: { count: number }) => void
+    const mockCreator = vi.fn((set: SetState, _get: () => unknown, _api: unknown) => ({
       count: 0,
       increment: () => set({ count: 1 }),
     }))
 
-    const wrapped = monitor.middleware(mockCreator) as (...args: any[]) => any
-    const mockSet = vi.fn()
+    const wrapped = monitor.middleware(mockCreator)
+    const mockSet = vi.fn<SetState>()
     const mockGet = vi.fn()
-    const mockApi = {} as any
+    const mockApi = {}
 
     wrapped(mockSet, mockGet, mockApi)
 
@@ -80,15 +81,16 @@ describe('StorePerformanceMonitor', () => {
       enabled: false,
     })
 
-    const mockCreator = vi.fn((set: any) => ({
+    type SetState = (partial: { count: number }) => void
+    const mockCreator = vi.fn((set: SetState, _get: () => unknown, _api: unknown) => ({
       count: 0,
       increment: () => set({ count: 1 }),
     }))
 
-    const wrapped = monitor.middleware(mockCreator) as (...args: any[]) => any
-    const mockSet = vi.fn()
+    const wrapped = monitor.middleware(mockCreator)
+    const mockSet = vi.fn<SetState>()
     const mockGet = vi.fn()
-    const mockApi = {} as any
+    const mockApi = {}
 
     wrapped(mockSet, mockGet, mockApi)
 

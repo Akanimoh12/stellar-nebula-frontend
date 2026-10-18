@@ -123,7 +123,7 @@ export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasPr
     (pointId: string, resourceType: ResourceType, amount: number) => {
       if (!canScan(pointId)) {
         setLiveMessage(
-          `Scan point ${pointId} is on cooldown. ${remainingSecondsMap[pointId]} seconds remaining.`
+          `Scan point ${pointId} is on cooldown. ${getRemainingSeconds(pointId)} seconds remaining.`
         )
         haptics.warning()
         return
@@ -164,7 +164,7 @@ export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasPr
         })
       }, SCAN_CHANNEL_DURATION_SEC * 1000)
     },
-    [canScan, remainingSecondsMap, startCooldown, onScanComplete]
+    [canScan, getRemainingSeconds, startCooldown, onScanComplete]
   )
 
   const handleWrapperKeyDown = useCallback(
@@ -246,6 +246,10 @@ export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasPr
   }, [liveMessage])
 
   return (
+    // role="application" is the WAI-ARIA role for a widget that handles its own
+    // keyboard input, which this canvas does; jsx-a11y does not count it as
+    // interactive, so its keyboard handler needs this explicit exception.
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <div
       ref={wrapperRef}
       tabIndex={0}

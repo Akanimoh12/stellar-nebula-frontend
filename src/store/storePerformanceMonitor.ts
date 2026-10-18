@@ -134,12 +134,15 @@ export function createPerformanceMonitor(config: StorePerformanceConfig) {
    * )
    * ```
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function middleware(creator: (set: any, get: any, api: any) => any): typeof creator {
+  // Generic over the store's own `set` and remaining creator arguments, so the
+  // wrapped creator keeps exactly the types zustand (or a test) passes in.
+  function middleware<TSet extends (...args: never[]) => unknown, TRest extends unknown[], TResult>(
+    creator: (set: TSet, ...rest: TRest) => TResult
+  ): typeof creator {
     if (!enabled) return creator
 
-    return (set: any, get: any, api: any) => {
-      const wrappedSet: typeof set = (...args: any[]) => {
+    return (set: TSet, ...rest: TRest) => {
+      const wrappedSet = ((...args: Parameters<TSet>) => {
         const start = performance.now()
         set(...args)
         const duration = performance.now() - start
@@ -162,9 +165,9 @@ export function createPerformanceMonitor(config: StorePerformanceConfig) {
             threshold: slowUpdateThresholdMs,
           })
         }
-      }
+      }) as TSet
 
-      return creator(wrappedSet, get, api)
+      return creator(wrappedSet, ...rest)
     }
   }
 

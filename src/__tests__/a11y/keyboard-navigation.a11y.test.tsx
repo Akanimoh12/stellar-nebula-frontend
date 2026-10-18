@@ -3,7 +3,9 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 
-vi.mock('@services/wallets', () => ({
+vi.mock('@services/wallets', async () => ({
+  // Complete mock so a newly added wallet export cannot break this suite.
+  ...(await (await import('@/test/mocks/walletServices')).createWalletServicesMock()),
   isFreighterInstalled: vi.fn().mockResolvedValue(false),
   isLedgerAvailable: vi.fn().mockResolvedValue(false),
   connectLedger: vi.fn(),

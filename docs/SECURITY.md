@@ -23,34 +23,85 @@ Key security principles applied:
 
 ## Dependency Security Review
 
-### Audit status
+### Policy
 
-The package dependency manifest and lockfile were inspected, and the following security controls were applied:
+- **Production dependencies** (anything that ships in the bundle) may never carry a
+  known **high** or **critical** advisory. These cannot be allowlisted; the fix is an
+  upgrade, a replacement, or removing the dependency.
+- **Development / build-time dependencies** with a high or critical advisory must be
+  fixed, or recorded in [`.audit-allowlist.json`](../.audit-allowlist.json) with a
+  reason explaining why the advisory is not exploitable here, the date it was
+  reviewed, and an **expiry date** (at most ~3 months out).
+- **Moderate / low** advisories are reviewed when Dependabot opens a PR or during the
+  regular dependency upgrade, and fixed when a non-breaking upgrade exists.
 
-- `package-lock.json` is present and can be used for deterministic audits.
-- `.gitignore` was updated to ignore `.env` and `.env.*` files while preserving `.env.example`.
+### How it is enforced
 
-### Audit execution note
+| Control                                                                                                                                                                                                                                                                             | Where                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| CI gate: `npm run audit:ci` (`scripts/audit-check.mjs`) fails on any unreviewed high/critical advisory, any high/critical advisory in production dependencies, and any allowlist entry that has **expired** or **no longer matches** an advisory (so stale exceptions get removed). | `dependency-scan` job in `.github/workflows/ci.yml` |
+| The same scan runs **weekly on a schedule**, so a newly published advisory turns the job red even when no PRs are open.                                                                                                                                                             | `.github/workflows/ci.yml` (`schedule`)             |
+| Dependabot opens grouped version-update PRs daily (npm) and weekly (GitHub Actions); security-update PRs are grouped separately.                                                                                                                                                    | `.github/dependabot.yml`                            |
+| Dependabot alerts and security updates must be enabled for the repository (Settings → Code security → Dependabot alerts / Dependabot security updates).                                                                                                                             | Repository settings                                 |
 
-A direct `npm audit` execution attempt could not be completed in the current workspace environment because shell access was unavailable for audit commands.
-
-Recommended commands:
+### Running it locally
 
 ```bash
-npm audit
-npm audit fix
+npm run audit:ci                  # the CI gate
+npm audit --omit=dev              # production dependencies only
+npm audit fix                     # apply non-breaking fixes
 ```
 
-### Findings & recommendations
+### Adding an exception
 
-- No high/critical findings were obtained from an automated audit in this environment.
-- The following dependency families should be monitored closely for vulnerabilities:
-  - `@stellar/stellar-sdk`
-  - `@albedo-link/intent`
-  - `react`, `react-dom`, `react-router-dom`
-  - `vite`, `typescript`, `eslint`, `tailwindcss`
-- Enable automated dependency scanning using Dependabot, Renovate, or GitHub security alerts.
-- Run `npm audit` in CI or a local environment and fix any high/critical vulnerabilities immediately.
+Only for development/build-time dependencies, and only when no fixed version can be
+adopted yet. Add an entry to `.audit-allowlist.json`:
+
+```json
+{
+  "id": "GHSA-xxxx-xxxx-xxxx",
+  "package": "affected-package",
+  "severity": "high",
+  "paths": ["direct-dep > affected-package"],
+  "scope": "development (build-time only)",
+  "reason": "Why it is not exploitable in this project, and what the real fix is.",
+  "reviewed": "YYYY-MM-DD",
+  "expires": "YYYY-MM-DD"
+}
+```
+
+The PR adding it needs a reviewer's sign-off. When the entry expires, CI fails until it
+is re-reviewed (new expiry) or the dependency is fixed.
+
+### Current status (2026-10-18)
+
+`npm audit` reported 57 advisories (5 critical, 34 high). After this review:
+
+- **0 critical, 0 high in production dependencies.**
+- Resolved by upgrade: `@stellar/stellar-sdk` 15 → 17 (bundled `axios` prototype-pollution
+  and `toml` advisories), `vitest` / `@vitest/*` → 4.1.12, `@faker-js/faker` 9 → 10, plus
+  the transitive fixes applied by `npm audit fix` (`postcss`, `proxy-addr`,
+  `browserslist`, `fast-uri`, `form-data`, `js-yaml`, `compression`, …).
+- Removed: `@size-limit/preset-app` (its headless-Chrome timing was unused — every
+  `.size-limit.json` budget sets `"running": false`; `@size-limit/file` covers size
+  budgets) and `@lhci/cli` as a devDependency (its `puppeteer`/proxy chain has no
+  fixed release; the performance job now runs a pinned `npx @lhci/cli@0.15.1`, so it is
+  no longer installed for every developer and CI job).
+- `@storybook/addon-essentials@8` removed: it is built into Storybook 10 and its
+  Storybook 8 peer requirement broke `npm ci`.
+- **One allowlisted advisory:** `braces` GHSA-vfj7-8cjw-p6xm (high), reached only through
+  Tailwind CSS 3 at build time. See the entry in `.audit-allowlist.json`; the fix is the
+  Tailwind CSS 4 migration (expires 2027-01-31).
+- **Follow-ups (moderate):** `react-router-dom` 6 → 7 for GHSA-wrjc-x8rr-h8h6 (open
+  redirect via backslash in `<Link>`/`useNavigate`) and GHSA-337j-9hxr-rhxg — a major
+  upgrade tracked separately.
+
+### Dependency families to watch
+
+- `@stellar/stellar-sdk`, `@albedo-link/intent`, `@walletconnect/*`, `@ledgerhq/*` —
+  they handle signing and transaction data.
+- `react`, `react-dom`, `react-router-dom`.
+- Build tooling: `vite`, `typescript`, `eslint`, `tailwindcss`.
 
 ## Wallet Security Review
 
@@ -136,8 +187,7 @@ npm audit fix
 
 ### Vulnerable Components
 
-- Dependency audit could not be executed here, so component vulnerabilities remain unverified until `npm audit` can run.
-- Recommended: enable automated dependency scanning.
+- Enforced in CI by `npm run audit:ci`; see [Dependency Security Review](#dependency-security-review).
 
 ### Authentication Failures
 
@@ -181,8 +231,8 @@ When a CDN resource changes upstream, run `npm run sri:update` and commit the re
 ## Recommendations
 
 - Add a Content Security Policy (CSP) at the hosting layer.
-- Enable Dependabot or Renovate for automated dependency upgrades.
-- Add a CI step to run `npm audit` and fail on high/critical vulnerabilities.
+- Migrate to Tailwind CSS 4 to retire the `braces` allowlist entry.
+- Upgrade `react-router-dom` to v7 for the moderate open-redirect advisories.
 - Add runtime secure RPC validation to reject non-HTTPS endpoints.
 - Implement wallet phishing detection guidance in UI messaging.
 - Use transaction simulation wherever possible before signing.
@@ -194,5 +244,5 @@ When a CDN resource changes upstream, run `npm run sri:update` and commit the re
 - `SECURITY.md` has been created with a project-specific review.
 - Code-level wallet and transaction safety improvements were implemented.
 - `.gitignore` now excludes environment files.
-- `npm audit` was not executed in this workspace due shell access restrictions in the current environment.
-- Recommended next step: run `npm audit` and `npm audit fix` in a local/CI environment, then review any high/critical issues.
+- `npm audit` was run on 2026-10-18; high/critical findings were resolved or reviewed as described in
+  [Dependency Security Review](#dependency-security-review), and the CI gate now enforces the policy.

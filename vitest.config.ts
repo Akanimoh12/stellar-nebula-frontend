@@ -47,8 +47,18 @@ export default defineConfig({
           environment: 'happy-dom',
           globals: true,
           setupFiles: ['./src/test/setup.ts'],
-          testTimeout: 30000,
-          hookTimeout: 30000,
+          testTimeout: 15000,
+          // `src/config/env.ts` validates these at import time, so without them any
+          // suite that imports the API client fails to load. Non-secret test values;
+          // tests that exercise validation stub their own.
+          env: {
+            VITE_STELLAR_RPC_URL: 'https://soroban-testnet.stellar.org',
+            VITE_STELLAR_HORIZON_URL: 'https://horizon-testnet.stellar.org',
+            VITE_STELLAR_PASSPHRASE: 'Test SDF Network ; September 2015',
+            VITE_NEBULA_CONTRACT_ID: 'CTEST_NEBULA',
+            VITE_TOKEN_CONTRACT_ID: 'CTEST_TOKEN',
+            VITE_API_BASE_URL: 'https://api.test',
+          },
         },
       },
       {

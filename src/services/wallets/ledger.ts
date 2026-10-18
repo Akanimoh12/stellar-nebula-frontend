@@ -1,5 +1,6 @@
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
 import Str from '@ledgerhq/hw-app-str'
+import { Buffer } from 'buffer'
 import { Keypair, StrKey, TransactionBuilder } from '@stellar/stellar-sdk'
 import type { PublicKey, StellarNetwork, XDR } from '@/types'
 
@@ -67,9 +68,10 @@ export async function signTransactionWithLedger(
 
   try {
     const transaction = TransactionBuilder.fromXDR(xdr, networkPassphrase)
+    // stellar-sdk 17 returns a plain Uint8Array; the Ledger app API takes a Buffer.
     const { signature } = await app.signTransaction(
       LEDGER_STELLAR_PATH,
-      transaction.signatureBase()
+      Buffer.from(transaction.signatureBase())
     )
 
     transaction.addSignature(

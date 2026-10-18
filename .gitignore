@@ -34,5 +34,15 @@ mimo
 .mimo/*
 mimo/*
 
-# Test coverage
-coverage/
+
+# CI lint / type-check reports (posted to PRs)
+eslint-report.txt
+typecheck-report.txt
+
+# Bundle visualizer output (rollup-plugin-visualizer)
+stats.html
+stats.json
+
+# Bundle analysis reports (scripts/bundle-analysis.mjs)
+bundle-report.json
+bundle-report.md

@@ -25,26 +25,26 @@ function seedFailedScan() {
           id: 'op-1',
           type: 'scan',
           targetId: 'neb-1',
-          startedAt: new Date(Date.now() - 500).toISOString()
+          startedAt: new Date(Date.now() - 500).toISOString(),
         },
         status: 'failed',
         createdAt: new Date(Date.now() - 500).toISOString(),
         completedAt: new Date().toISOString(),
-        error: 'insufficient balance'
-      }
+        error: 'insufficient balance',
+      },
     ],
     // Relative to now, so the cooldown is genuinely active whenever the suite
     // runs: a fixed timestamp would silently expire on a later day and the
     // rollback assertions would pass for the wrong reason.
-    scanCooldowns: [{ nebulaId: 'neb-1', readyAt: new Date(Date.now() + 60_000).toISOString() }]
+    scanCooldowns: [{ nebulaId: 'neb-1', readyAt: new Date(Date.now() + 60_000).toISOString() }],
   })
 }
 
 function Harness({
   submit = vi.fn().mockResolvedValue('ok'),
-  canRollback = true
+  canRollback = true,
 }: {
-  submit?: ReturnType<typeof vi.fn>
+  submit?: (payload: unknown, attempt: number) => Promise<unknown>
   canRollback?: boolean
 }) {
   const recovery = useTransactionRecovery({ submit, baseDelayMs: 1 })
@@ -96,7 +96,9 @@ describe('TransactionRecoveryPanel', () => {
     await user.click(screen.getByRole('button', { name: /dismiss the transaction error/i }))
 
     await waitFor(() => {
-      expect(screen.queryByRole('region', { name: /transaction recovery/i })).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('region', { name: /transaction recovery/i })
+      ).not.toBeInTheDocument()
     })
     // Dismiss means "stop showing me this", not "undo this".
     expect(useGameStore.getState().scanCooldowns).toHaveLength(1)
@@ -107,7 +109,9 @@ describe('TransactionRecoveryPanel', () => {
     render(<Harness canRollback={false} />)
 
     expect(screen.queryByRole('button', { name: /roll back/i })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /dismiss the transaction error/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /dismiss the transaction error/i })
+    ).toBeInTheDocument()
   })
 
   it('re-submits through retry when a preserved frame is supplied', async () => {
@@ -126,7 +130,7 @@ describe('TransactionRecoveryPanel', () => {
             payload: { targetId: 'neb-1' },
             label: 'Scan sector',
             error: 'insufficient balance',
-            attempt: 0
+            attempt: 0,
           }}
         />
       )

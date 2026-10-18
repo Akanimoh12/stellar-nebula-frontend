@@ -5,7 +5,9 @@ import { WalletProvider } from '@/contexts/WalletContext'
 import { WalletDisplay } from '../WalletDisplay'
 
 // Must be a plain string literal — vi.mock is hoisted and cannot close over variables
-vi.mock('@services/wallets', () => ({
+vi.mock('@services/wallets', async () => ({
+  // Complete mock so a newly added wallet export cannot break this suite.
+  ...(await (await import('@/test/mocks/walletServices')).createWalletServicesMock()),
   isFreighterInstalled: vi.fn().mockResolvedValue(true),
   isLedgerAvailable: vi.fn().mockResolvedValue(false),
   connectLedger: vi.fn(),

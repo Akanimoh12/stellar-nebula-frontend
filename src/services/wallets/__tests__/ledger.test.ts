@@ -94,7 +94,13 @@ describe('Ledger wallet service', () => {
     ).resolves.toBe('SIGNED_XDR')
 
     expect(fromXDR).toHaveBeenCalledWith('RAW_XDR', 'Test SDF Network ; September 2015')
-    expect(signTransaction).toHaveBeenCalledWith("44'/148'/0'", Buffer.from('signature-base'))
+    // The signature base is re-wrapped as a Buffer for the Ledger API, so compare bytes.
+    expect(signTransaction).toHaveBeenCalledTimes(1)
+    const [path, signatureBase] = signTransaction.mock.calls[0]
+    expect(path).toBe("44'/148'/0'")
+    expect(Array.from(signatureBase as Uint8Array)).toEqual(
+      Array.from(Buffer.from('signature-base'))
+    )
     expect(addSignature).toHaveBeenCalledWith(
       'GLEDGER123',
       Buffer.from('signature').toString('base64')

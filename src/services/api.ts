@@ -29,7 +29,12 @@ export interface ApiRequestConfig extends RequestInit {
   retries?: number
 }
 
-export interface ApiCallOptions extends RequestInit {
+/**
+ * `RequestInit` without its string `cache` mode: here `cache` is the client-side
+ * GET response cache switch, and it is never forwarded to `fetch` (which rejects
+ * non-string cache values).
+ */
+export interface ApiCallOptions extends Omit<RequestInit, 'cache'> {
   /** Set false to bypass the GET response cache for this call. */
   cache?: boolean
 }
@@ -128,7 +133,8 @@ async function request<T>(
   options: ApiCallOptions = {},
   retries = 2
 ): Promise<ApiResponse<T>> {
-  let config: ApiRequestConfig = { ...options, url: path, retries }
+  const { cache: useResponseCache, ...init } = options
+  let config: ApiRequestConfig = { ...init, url: path, retries }
   const method = options.method || 'GET'
   const startTime = performance.now()
 
@@ -160,7 +166,8 @@ async function request<T>(
   // Issue #307: cache only safe reads, keyed on path + normalized query.
   // Writes never read from cache and never write to it — they invalidate the
   // affected reads instead (see invalidateAfterMutation below).
-  const cacheable = isCacheableMethod(method_) && !options.cache
+  // Only an explicit `cache: false` bypasses the cache; omitting it caches.
+  const cacheable = isCacheableMethod(method_) && useResponseCache !== false
   const cacheKey = cacheable ? cacheKeyFor(finalUrl) : null
 
   if (cacheKey) {
@@ -312,7 +319,7 @@ export function get<T>(path: string, options?: ApiCallOptions): Promise<ApiRespo
 export function post<T>(
   path: string,
   body?: unknown,
-  options?: RequestInit
+  options?: ApiCallOptions
 ): Promise<ApiResponse<T>> {
   return request<T>(path, {
     ...options,
@@ -331,7 +338,7 @@ export function post<T>(
 export function put<T>(
   path: string,
   body?: unknown,
-  options?: RequestInit
+  options?: ApiCallOptions
 ): Promise<ApiResponse<T>> {
   return request<T>(path, {
     ...options,
@@ -347,6 +354,6 @@ export function put<T>(
  * @example
  * const { error } = await del('/users/1')
  */
-export function del<T>(path: string, options?: RequestInit): Promise<ApiResponse<T>> {
+export function del<T>(path: string, options?: ApiCallOptions): Promise<ApiResponse<T>> {
   return request<T>(path, { ...options, method: 'DELETE' })
 }

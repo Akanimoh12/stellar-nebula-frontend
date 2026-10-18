@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useTransactionRecovery, type RecoveryOutcome } from './useTransactionRecovery'
+import { useTransactionRecovery, type RecoveryOutcome } from '../useTransactionRecovery'
 import { useGameStore, initialGameState, type OptimisticGameOperation } from '@/store/gameStore'
 
 /**
@@ -16,7 +16,9 @@ import { useGameStore, initialGameState, type OptimisticGameOperation } from '@/
 // executes rather than only on the day the timestamp was written.
 const FAILED_AT = new Date(Date.now() - 500).toISOString()
 
-function failedOperation(overrides: Partial<OptimisticGameOperation> = {}): OptimisticGameOperation {
+function failedOperation(
+  overrides: Partial<OptimisticGameOperation> = {}
+): OptimisticGameOperation {
   return {
     id: 'op-failed',
     label: 'Scan sector',
@@ -25,7 +27,7 @@ function failedOperation(overrides: Partial<OptimisticGameOperation> = {}): Opti
     createdAt: FAILED_AT,
     completedAt: FAILED_AT,
     error: 'insufficient balance',
-    ...overrides
+    ...overrides,
   }
 }
 
@@ -34,8 +36,11 @@ function seedFailure(operation: OptimisticGameOperation = failedOperation()): vo
     ...initialGameState,
     optimisticOperations: [operation],
     scanCooldowns: [
-      { nebulaId: operation.operation.targetId, readyAt: new Date(Date.now() + 60_000).toISOString() }
-    ]
+      {
+        nebulaId: operation.operation.targetId,
+        readyAt: new Date(Date.now() + 60_000).toISOString(),
+      },
+    ],
   })
 }
 
@@ -182,6 +187,8 @@ describe('useTransactionRecovery', () => {
       result.current.rollback()
     })
 
-    expect(onOutcome).not.toHaveBeenCalledWith(expect.objectContaining({ status: 'retry_succeeded' }))
+    expect(onOutcome).not.toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'retry_succeeded' })
+    )
   })
 })

@@ -1,4 +1,6 @@
 import type { StellarNetwork } from '@/types'
+// Type-only: the client itself is still loaded lazily in `getSignClient`.
+import type SignClient from '@walletconnect/sign-client'
 
 export interface WalletConnectPairing {
   topic: string
@@ -8,18 +10,18 @@ export interface WalletConnectPairing {
 
 const WC_STORAGE_KEY = 'stellar-nebula:walletconnect'
 
-let signClient: any = null
+let signClient: SignClient | null = null
 
-async function getSignClient() {
+async function getSignClient(): Promise<SignClient> {
   if (signClient) return signClient
 
   try {
-    const [{ SignClient }] = await Promise.all([
+    const [{ SignClient: SignClientModule }] = await Promise.all([
       import('@walletconnect/sign-client'),
       import('@walletconnect/modal'),
     ])
 
-    signClient = await SignClient.init({
+    const client = await SignClientModule.init({
       projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? '',
       metadata: {
         name: 'Nebula Nomad',
@@ -28,8 +30,9 @@ async function getSignClient() {
         icons: [`${window.location.origin}/icon-192.png`],
       },
     })
+    signClient = client
 
-    return signClient
+    return client
   } catch (error) {
     throw new Error(
       `Failed to initialize WalletConnect: ${error instanceof Error ? error.message : String(error)}`
@@ -74,31 +77,27 @@ export async function connectWalletConnect(
   return { publicKey, session }
 }
 
-export function signTransactionWithWalletConnect(
+export async function signTransactionWithWalletConnect(
   xdr: string,
   network: StellarNetwork,
   session: unknown
 ): Promise<string> {
   const wcSession = session as { topic: string }
+  const client = await getSignClient()
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      const client = await getSignClient()
-
-      const result = await client.request({
-        topic: wcSession.topic,
-        chainId: `stellar:${network}`,
-        request: {
-          method: 'stellar_signXDR',
-          params: { xdr },
-        },
-      })
-
-      resolve((result.signedXDR ?? result) as string)
-    } catch (error) {
-      reject(error)
-    }
+  // Wallets differ: some return `{ signedXDR }`, others the signed XDR string itself.
+  const result = await client.request<{ signedXDR?: string } | string>({
+    topic: wcSession.topic,
+    chainId: `stellar:${network}`,
+    request: {
+      method: 'stellar_signXDR',
+      params: { xdr },
+    },
   })
+
+  const signed = typeof result === 'string' ? result : result?.signedXDR
+  if (!signed) throw new Error('WalletConnect did not return a signed transaction')
+  return signed
 }
 
 export function getWalletConnectNetwork(): StellarNetwork {

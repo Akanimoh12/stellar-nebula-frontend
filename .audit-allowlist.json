@@ -1,0 +1,19 @@
+{
+  "$comment": "Reviewed npm audit exceptions. Each entry needs a reason and an expiry; scripts/audit-check.mjs fails CI once an entry expires or stops matching anything. See docs/SECURITY.md.",
+  "advisories": [
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "severity": "high",
+      "paths": [
+        "tailwindcss > micromatch > braces",
+        "tailwindcss > fast-glob > micromatch > braces",
+        "tailwindcss > chokidar > braces"
+      ],
+      "scope": "development (build-time only)",
+      "reason": "Stack-exhaustion DoS when expanding deeply nested brace patterns. The only input is Tailwind's own `content` globs from tailwind.config.js, written by us and evaluated at build time; no user-supplied pattern ever reaches braces, and nothing from this chain ships in the bundle. No patched braces release exists; the fix is migrating to Tailwind CSS 4, tracked as a follow-up because it changes the CSS toolchain and minimum browser support.",
+      "reviewed": "2026-10-18",
+      "expires": "2027-01-31"
+    }
+  ]
+}

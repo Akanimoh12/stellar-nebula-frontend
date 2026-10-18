@@ -53,28 +53,35 @@ npm run preview # optional: serve the built output locally
 
 ### Docker
 
-Two Dockerfiles are provided.
+The container workflow is optimized with multi-stage builds and layer caching (#366) to ensure production images remain minimal (<150MB, typically ~25–40MB) and build times are expedited.
 
-**Development**
+**Development** (`Dockerfile`)
+
+Multi-stage development build isolating dependency installation (`npm ci`) and mounting application code for hot reloading:
 
 ```bash
 docker-compose up dev # serves Vite dev server on :5173
 ```
 
-**Production** (Dockerfile.prod is a multi-stage build → Nginx serving `dist/`)
+**Production** (`Dockerfile.prod`)
+
+Multi-stage pipeline:
+1. `deps`: Installs production dependencies with layer caching.
+2. `builder`: Executes `npm run build` to generate compiled static assets in `/app/dist`.
+3. `runner`: Minimal `nginx:alpine` runtime serving only `/app/dist`. No `node_modules` or development dependencies are packaged into the final image.
 
 ```bash
 docker-compose up prod # builds and serves on :8080
 ```
 
-Environment variables are passed to the container at build/runtime via `docker-compose.yml` (e.g. `VITE_STELLAR_NETWORK=FUTURENET`). For a custom deployment:
+Custom builds:
 
 ```bash
 docker build -f Dockerfile.prod -t nebula-nomad:latest .
 docker run --rm -p 8080:80 -e VITE_STELLAR_NETWORK=mainnet nebula-nomad:latest
 ```
 
-Nginx default config serves `dist/`; add a custom `nginx.conf` mapping unknown routes to `index.html` for SPA routing if you replace the default config.
+The production container includes custom `nginx.conf` providing SPA client routing fallbacks, gzip compression, asset cache headers (`/assets/` cached for 1 year), and a `/health` endpoint.
 
 ### Vercel
 

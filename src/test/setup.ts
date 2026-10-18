@@ -3,8 +3,23 @@ import { server } from './mocks/server'
 
 // Establish API mocking before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }))
-// Reset any runtime request handlers added during tests
-afterEach(() => server.resetHandlers())
+
+// Reset any runtime request handlers added during tests and clean up
+// browser-like storage between tests so no suite leaks state into another (#421).
+afterEach(() => {
+  server.resetHandlers()
+
+  // Clear both storage mechanisms. The localStorage mock below keeps an
+  // internal object that `.clear()` empties; sessionStorage (if present in the
+  // environment) is cleaned too for parity.
+  localStorage.clear()
+  try {
+    sessionStorage.clear()
+  } catch {
+    // sessionStorage may not exist in every happy-dom configuration — ignore.
+  }
+})
+
 // Clean up once tests finish
 afterAll(() => server.close())
 

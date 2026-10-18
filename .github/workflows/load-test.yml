@@ -1,0 +1,88 @@
+name: Load Test
+
+on:
+  # Manual trigger with configurable parameters
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type to run'
+        required: true
+        default: 'scanning-flow'
+        type: choice
+        options:
+          - scanning-flow
+          - stress-test
+          - soak-test
+      base_url:
+        description: 'Target base URL (app shell)'
+        required: false
+        default: 'http://localhost:5173'
+      api_base:
+        description: 'Target API base URL'
+        required: false
+        default: 'https://api.test'
+
+  # Run scanning-flow after successful deployment to staging
+  # Uncomment when staging environment is available:
+  # workflow_run:
+  #   workflows: ["Deploy to Staging"]
+  #   types: [completed]
+
+permissions:
+  contents: read
+
+env:
+  K6_VERSION: '0.54.0'
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install k6
+        run: |
+          curl -fsSL https://github.com/grafana/k6/releases/download/v${{ env.K6_VERSION }}/k6-v${{ env.K6_VERSION }}-linux-amd64.tar.gz \
+            | tar xzf - --strip-components=1 -C /usr/local/bin k6-v${{ env.K6_VERSION }}-linux-amd64/k6
+
+      - name: Verify k6 installation
+        run: k6 version
+
+      - name: Run load test
+        run: |
+          k6 run \
+            -e BASE_URL="${{ inputs.base_url || 'http://localhost:5173' }}" \
+            -e API_BASE="${{ inputs.api_base || 'https://api.test' }}" \
+            --summary-export=load-test-results.json \
+            test/load/${{ inputs.test_type || 'scanning-flow' }}.js
+        continue-on-error: true
+
+      - name: Generate summary
+        if: always()
+        run: |
+          {
+            echo '## 📊 Load Test Results'
+            echo ''
+            echo "**Test:** \`${{ inputs.test_type || 'scanning-flow' }}\`"
+            echo "**Target:** \`${{ inputs.base_url || 'http://localhost:5173' }}\`"
+            echo ''
+            if [ -f load-test-results.json ]; then
+              echo '```json'
+              cat load-test-results.json | head -100
+              echo ''
+              echo '```'
+            else
+              echo '_No results file generated._'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: load-test-results
+          path: load-test-results.json
+          if-no-files-found: warn

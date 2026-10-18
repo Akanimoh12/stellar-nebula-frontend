@@ -77,3 +77,22 @@ export const ReconnectFailed: Story = {
     ),
   ],
 }
+
+export const DisconnectedInteraction: Story = {
+  args: {
+    onOpenConnectModal: () => undefined,
+  },
+  decorators: [
+    (Story) => (
+      <WalletContext.Provider value={makeCtx({})}>
+        <Story />
+      </WalletContext.Provider>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector('button')
+    if (button) {
+      button.click()
+    }
+  },
+}

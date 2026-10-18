@@ -56,7 +56,13 @@ Every interactive component should have an a11y test covering keyboard navigatio
 
 ### Storybook Interaction Tests
 
-When writing a `*.stories.tsx`, ensure it renders in the Vitest Storybook project (browser-backed). This validates the component and its stories compile and mount.
+When writing a `*.stories.tsx`, ensure it renders in the Vitest Storybook project (browser-backed via Playwright Chromium). This validates the component and its stories compile and mount, executes play functions to verify interactions, and catches rendering regressions:
+
+```bash
+npm run test:storybook         # run Storybook tests in Chromium
+npm run test:storybook:watch   # watch mode
+npm run build-storybook        # build static Storybook
+```
 
 ### Performance Tests
 

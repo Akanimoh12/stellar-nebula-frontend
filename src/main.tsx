@@ -7,6 +7,7 @@ import { initErrorTracking } from './services/errorTracking'
 import { logger } from './services/logging'
 import { initializeMonitoring } from './services/monitoring'
 import { repairCorruptedSaveData } from './services/saveLoad'
+import { initWebVitalsMonitoring } from './hooks/useWebVitals'
 import { env } from './config'
 import { preloadCriticalAssets } from './utils/preload'
 
@@ -58,6 +59,9 @@ if (SENTRY_DSN) {
     release: import.meta.env.VITE_APP_VERSION || undefined,
   })
 }
+
+// Initialize Web Vitals performance monitoring (#365)
+initWebVitalsMonitoring()
 
 logger.info('Monitoring and logging initialized')
 

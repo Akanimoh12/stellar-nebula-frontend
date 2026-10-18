@@ -283,4 +283,86 @@ export function addMonitoringBreadcrumb(
   }
 }
 
+export interface WebVitalMetric {
+  name: 'FCP' | 'LCP' | 'CLS' | 'FID' | 'TTFB'
+  value: number
+  rating: 'good' | 'needs-improvement' | 'poor'
+  id?: string
+  delta?: number
+  navigationType?: string
+}
+
+/**
+ * Report Web Vitals metrics to Sentry and real user monitoring pipelines.
+ */
+export function trackWebVital(metric: WebVitalMetric): void {
+  try {
+    const roundedValue =
+      metric.name === 'CLS' ? Number(metric.value.toFixed(4)) : Math.round(metric.value)
+
+    log.info(`[Web Vital] ${metric.name}: ${roundedValue} (${metric.rating})`, {
+      metric: metric.name,
+      value: roundedValue,
+      rating: metric.rating,
+      id: metric.id,
+    })
+
+    // Sentry measurements & tags for performance dashboard
+    if (typeof (Sentry as any).setMeasurement === 'function') {
+      ;(Sentry as any).setMeasurement(
+        metric.name,
+        roundedValue,
+        metric.name === 'CLS' ? '' : 'millisecond'
+      )
+    }
+
+    Sentry.setTag(`vital.${metric.name.toLowerCase()}`, metric.rating)
+    Sentry.setExtra(`vital.${metric.name.toLowerCase()}_value`, roundedValue)
+
+    // Capture breadcrumb for diagnostics
+    Sentry.addBreadcrumb({
+      category: 'web-vital',
+      message: `${metric.name}: ${roundedValue} (${metric.rating})`,
+      level: metric.rating === 'poor' ? 'warning' : 'info',
+      data: {
+        metric: metric.name,
+        value: roundedValue,
+        rating: metric.rating,
+        id: metric.id,
+      },
+    })
+
+    // Alert for regressions if metric is poor
+    if (metric.rating === 'poor') {
+      Sentry.captureMessage(`[Performance Alert] Poor ${metric.name}: ${roundedValue}`, {
+        level: 'warning',
+        tags: {
+          regression_type: 'web-vital',
+          metric: metric.name,
+        },
+        contexts: {
+          web_vital: {
+            name: metric.name,
+            value: roundedValue,
+            rating: metric.rating,
+            id: metric.id,
+          },
+        },
+      })
+    }
+
+    // LogRocket custom event
+    const LogRocket = (window as any).LogRocket
+    if (LogRocket && typeof LogRocket.track === 'function') {
+      LogRocket.track('Web Vital Recorded', {
+        metric: metric.name,
+        value: roundedValue,
+        rating: metric.rating,
+      })
+    }
+  } catch (error) {
+    log.debug('Failed to record web vital', { error, metric: metric.name })
+  }
+}
+
 export { Sentry }

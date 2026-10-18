@@ -66,6 +66,25 @@ export default defineConfig({
       },
       {
         extends: true,
+        test: {
+          name: 'performance',
+          include: ['test/performance/**/*.{test,spec}.{ts,tsx}'],
+          environment: 'happy-dom',
+          globals: true,
+          setupFiles: ['./src/test/setup.ts'],
+          testTimeout: 15000,
+          env: {
+            VITE_STELLAR_RPC_URL: 'https://soroban-testnet.stellar.org',
+            VITE_STELLAR_HORIZON_URL: 'https://horizon-testnet.stellar.org',
+            VITE_STELLAR_PASSPHRASE: 'Test SDF Network ; September 2015',
+            VITE_NEBULA_CONTRACT_ID: 'CTEST_NEBULA',
+            VITE_TOKEN_CONTRACT_ID: 'CTEST_TOKEN',
+            VITE_API_BASE_URL: 'https://api.test',
+          },
+        },
+      },
+      {
+        extends: true,
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config
           // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest

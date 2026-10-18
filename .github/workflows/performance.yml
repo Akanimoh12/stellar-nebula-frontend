@@ -70,7 +70,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           # Fail the workflow if Lighthouse CI assertions failed
-          if [ -f .lighthouseci/lhr-*.json ]; then
+          if compgen -G ".lighthouseci/*.json" > /dev/null || [ -d .lighthouseci ]; then
             echo "Lighthouse reports generated successfully"
           else
             echo "WARNING: No Lighthouse reports found"

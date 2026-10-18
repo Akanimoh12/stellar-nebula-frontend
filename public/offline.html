@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nebula Nomad — Offline Mode</title>
+  <style>
+    :root {
+      --bg-space: #07111f;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(50, 214, 165, 0.25);
+      --accent: #32d6a5;
+      --accent-glow: rgba(50, 214, 165, 0.4);
+      --cyan: #38bdf8;
+      --amber: #f59e0b;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-space);
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(50, 214, 165, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(56, 189, 248, 0.08) 0%, transparent 50%);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--amber);
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--amber);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--amber);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.5;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(12px);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.6rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .asset-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .asset-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.85rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .asset-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .btn {
+      padding: 0.85rem 1.75rem;
+      border-radius: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #07111f;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      background: #3ee2b1;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    #reconnect-msg {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      text-align: center;
+      min-height: 1.2rem;
+    }
+
+    .text-success { color: var(--accent); }
+    .text-error { color: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="status-badge" id="network-badge">
+        <span class="pulse-dot"></span>
+        <span id="badge-text">Telemetry Offline</span>
+      </div>
+      <h1>Subspace Carrier Lost</h1>
+      <p class="subtitle">
+        Your vessel is drifting in unmapped dark space. Exploration capabilities are operating in autonomous offline cache mode.
+      </p>
+    </div>
+
+    <!-- Cached Game State -->
+    <div class="card">
+      <div class="card-title">
+        <span>🚀 Cached Vessel Diagnostics</span>
+      </div>
+      <div class="grid-2">
+        <div class="stat-box">
+          <div class="stat-label">Vessel Designation</div>
+          <div class="stat-value" id="ship-name">Nomad Scout-01</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Vessel Class & Level</div>
+          <div class="stat-value" id="ship-class">Pathfinder Mk.I</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Harvested Stardust</div>
+          <div class="stat-value" id="res-stardust">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Cosmic Crystals</div>
+          <div class="stat-value" id="res-crystals">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Dark Matter</div>
+          <div class="stat-value" id="res-dark-matter">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Exploration Sector</div>
+          <div class="stat-value" id="session-sector">Sec-77 (Local)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cached Assets and Subsystems -->
+    <div class="card">
+      <div class="card-title">
+        <span>📦 Cached Assets & Offline Modules</span>
+      </div>
+      <ul class="asset-list" id="assets-container">
+        <li class="asset-item">
+          <span>Three.js WebGL Procedural Star Engine</span>
+          <span class="asset-status">✓ Ready in Cache</span>
+        </li>
+        <li class="asset-item">
+          <span>Procedural Nebula Shaders & Particle Field</span>
+          <span class="asset-status">✓ Ready in Cache</span>
+        </li>
+        <li class="asset-item">
+          <span>Ship Diagnostics & Upgrade Matrix</span>
+          <span class="asset-status">✓ Ready in Cache</span>
+        </li>
+        <li class="asset-item">
+          <span>Stellar Local Wallet State Vault</span>
+          <span class="asset-status">✓ Ready in Cache</span>
+        </li>
+        <li class="asset-item">
+          <span>Cosmic Audio & Synthesizer Bank</span>
+          <span class="asset-status">✓ Ready in Cache</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Reconnection Actions -->
+    <div class="card" style="text-align: center;">
+      <div class="card-title" style="justify-content: center;">
+        <span>📡 Horizon Relay Reconnection</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem;">
+        Re-establish contact with the Stellar network to synchronize harvested stardust, claim Soroban contract yields, and update galaxy charts.
+      </p>
+      <div class="actions">
+        <button class="btn btn-primary" id="reconnect-btn" onclick="attemptReconnect()">
+          <span>🔄 Attempt Reconnect</span>
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.href='/'">
+          <span>🌌 Return to Cockpit</span>
+        </button>
+      </div>
+      <div id="reconnect-msg"></div>
+    </div>
+  </div>
+
+  <script>
+    // Load and display cached game state from localStorage
+    function loadCachedGameState() {
+      try {
+        // Ship store
+        const rawShip = localStorage.getItem('stellar-nebula:ship-store');
+        if (rawShip) {
+          const parsed = JSON.parse(rawShip);
+          const state = parsed?.state || {};
+          const ships = Array.isArray(state.ships) ? state.ships : [];
+          const ship = ships.find(s => s.id === state.activeShipId) || ships[0] || state.ship;
+          if (ship?.name) document.getElementById('ship-name').textContent = ship.name;
+          if (ship?.model || ship?.class || ship?.level) {
+            document.getElementById('ship-class').textContent = `${ship.model || ship.class || 'Nomad'} ${ship.level ? 'Mk.' + ship.level : (ship.status ? '(' + ship.status + ')' : '')}`.trim();
+          }
+          if (ship?.lastKnownSector) {
+            document.getElementById('session-sector').textContent = ship.lastKnownSector;
+          }
+        }
+
+        // Resource store
+        const rawRes = localStorage.getItem('stellar-nebula:resource-store');
+        if (rawRes) {
+          const parsed = JSON.parse(rawRes);
+          const inv = parsed?.state?.inventory || parsed?.state?.resources || parsed?.state || {};
+          const stardustVal = inv.nebulaDust !== undefined ? inv.nebulaDust : inv.stardust;
+          const crystalsVal = inv.stellarium !== undefined ? inv.stellarium : (inv.voidcrystal !== undefined ? inv.voidcrystal : inv.crystals);
+          if (stardustVal !== undefined) document.getElementById('res-stardust').textContent = Number(stardustVal).toLocaleString();
+          if (crystalsVal !== undefined) document.getElementById('res-crystals').textContent = Number(crystalsVal).toLocaleString();
+          if (inv.darkMatter !== undefined) document.getElementById('res-dark-matter').textContent = Number(inv.darkMatter).toLocaleString();
+        }
+
+        // Session store
+        const rawSession = localStorage.getItem('stellar-nebula:session-store');
+        if (rawSession) {
+          const parsed = JSON.parse(rawSession);
+          const session = parsed?.state?.session || parsed?.state;
+          if (session?.sector || session?.currentSector) {
+            document.getElementById('session-sector').textContent = session.sector || session.currentSector;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not read cached game state:', e);
+      }
+    }
+
+    // Inspect CacheStorage if supported
+    async function inspectCaches() {
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          const container = document.getElementById('assets-container');
+          if (keys.length > 0) {
+            keys.forEach(cacheName => {
+              const li = document.createElement('li');
+              li.className = 'asset-item';
+              li.innerHTML = `<span>Workbox Cache: <code>${cacheName}</code></span><span class="asset-status">✓ Stored</span>`;
+              container.appendChild(li);
+            });
+          }
+        } catch (e) {
+          console.warn('CacheStorage inspection skipped:', e);
+        }
+      }
+    }
+
+    // Reconnection handling
+    async function attemptReconnect() {
+      const btn = document.getElementById('reconnect-btn');
+      const msg = document.getElementById('reconnect-msg');
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      msg.textContent = 'Probing Stellar Horizon node...';
+      msg.className = 'stat-label';
+
+      if (!navigator.onLine) {
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.style.opacity = '1';
+          msg.textContent = 'Network offline. Check local Wi-Fi or device connection.';
+          msg.className = 'text-error';
+        }, 800);
+        return;
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        await fetch('/', { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+        clearTimeout(timeout);
+
+        msg.textContent = 'Connection re-established! Returning to cockpit...';
+        msg.className = 'text-success';
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      } catch (err) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        msg.textContent = 'Relay node unreachable. Standing by in offline mode.';
+        msg.className = 'text-error';
+      }
+    }
+
+    // Listen for online events
+    window.addEventListener('online', () => {
+      const badge = document.getElementById('network-badge');
+      const text = document.getElementById('badge-text');
+      badge.style.background = 'rgba(50, 214, 165, 0.15)';
+      badge.style.borderColor = 'rgba(50, 214, 165, 0.4)';
+      badge.style.color = '#32d6a5';
+      text.textContent = 'Carrier Online';
+      const msg = document.getElementById('reconnect-msg');
+      msg.textContent = 'Network carrier detected! Tap Reconnect to sync.';
+      msg.className = 'text-success';
+    });
+
+    window.addEventListener('offline', () => {
+      const badge = document.getElementById('network-badge');
+      const text = document.getElementById('badge-text');
+      badge.style.background = 'rgba(245, 158, 11, 0.15)';
+      badge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+      badge.style.color = '#f59e0b';
+      text.textContent = 'Telemetry Offline';
+    });
+
+    loadCachedGameState();
+    inspectCaches();
+  </script>
+</body>
+</html>

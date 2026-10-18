@@ -79,7 +79,7 @@ export default defineConfig({
       // notification (issue #325) controls the moment of `skipWaiting`
       // instead of it happening silently in the background.
       registerType: 'prompt',
-      includeAssets: ['vite.svg', 'icon-*.png', 'icon-*.webp', '**/*.webp'],
+      includeAssets: ['vite.svg', 'icon-*.png', 'icon-*.webp', '**/*.webp', 'offline.html'],
       manifest: {
         name: 'Nebula Nomad - Space Exploration on Stellar',
         short_name: 'Nebula Nomad',

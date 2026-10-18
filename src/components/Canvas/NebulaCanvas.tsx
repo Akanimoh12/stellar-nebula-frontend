@@ -12,6 +12,7 @@ import { WebGlFallback } from './WebGlFallback'
 import { useGraphicsStore } from '@/store'
 import { useAdaptivePerformanceMode } from '@/hooks/useAdaptivePerformanceMode'
 import { useScanCooldown } from '@/hooks/useScanCooldown'
+import { usePageVisibility } from '@/hooks/useAnimationFrame'
 import { trackEvent } from '@/services/analytics'
 import { haptics } from '@/utils/haptics'
 import { rollScanReward, rollResourceAmount } from '@/utils/rarity'
@@ -83,6 +84,7 @@ export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasPr
   const performanceMode = useGraphicsStore((state) => state.performanceMode)
   const starfieldDensity = useGraphicsStore((state) => state.starfieldDensity)
   useAdaptivePerformanceMode()
+  const isPageVisible = usePageVisibility()
 
   const [focusedPointId, setFocusedPointId] = useState<string | null>(null)
   const [isWrapperFocused, setIsWrapperFocused] = useState(false)
@@ -284,6 +286,7 @@ export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasPr
 
       {showFps && <FpsCounter />}
       <Canvas
+        frameloop={isPageVisible ? 'always' : 'never'}
         camera={{ position: [0, 0, 5], fov: 60, near: 0.1, far: 1000 }}
         gl={{ antialias: !deviceHints.isMobile, powerPreference: 'high-performance' }}
         dpr={[1, deviceHints.isMobile ? 1.5 : 2]}

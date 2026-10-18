@@ -32,3 +32,5 @@ export type {
 } from './useTransactionHistory'
 export { useWebSocketStatus } from './useWebSocketStatus'
 export type { UseWebSocketStatusReturn } from './useWebSocketStatus'
+export { useAnimationFrame, usePageVisibility } from './useAnimationFrame'
+export type { FrameInfo, UseAnimationFrameOptions } from './useAnimationFrame'

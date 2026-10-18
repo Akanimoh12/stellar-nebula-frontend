@@ -6,6 +6,32 @@ vi.mock('@/hooks/useFrameRateMonitor', () => ({
   useFrameRateMonitor: () => ({ fps: 60 }),
 }))
 
+vi.mock('@react-three/fiber', () => ({
+  Canvas: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  useThree: () => ({
+    gl: { dispose: vi.fn(), forceContextLoss: vi.fn() },
+    scene: {},
+    camera: {},
+  }),
+  useFrame: vi.fn(),
+}))
+
+vi.mock('@react-three/drei', () => ({
+  Preload: () => null,
+  OrbitControls: () => null,
+}))
+
+vi.mock('@react-three/postprocessing', () => ({
+  EffectComposer: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Bloom: () => null,
+  DepthOfField: () => null,
+}))
+
+vi.mock('postprocessing', () => ({
+  KernelSize: { VERY_LARGE: 5 },
+  BlendFunction: { SCREEN: 1 },
+}))
+
 describe('Canvas components', () => {
   beforeEach(() => {
     vi.clearAllMocks()

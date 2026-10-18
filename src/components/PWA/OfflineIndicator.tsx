@@ -206,6 +206,23 @@ export function OfflineIndicator() {
           </span>
         )}
       </div>
+      {isOffline && (
+        <a
+          href="/offline"
+          style={{
+            ...retryButtonStyle,
+            background: 'rgba(255, 255, 255, 0.15)',
+            textDecoration: 'none',
+            fontSize: '0.75rem',
+            padding: '4px 10px',
+            color: 'inherit',
+            display: 'inline-flex',
+            alignItems: 'center',
+          }}
+        >
+          Diagnostics
+        </a>
+      )}
       <button
         type="button"
         onClick={handleRetry}

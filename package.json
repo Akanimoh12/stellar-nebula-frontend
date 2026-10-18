@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --project integration",
+    "test:e2e": "playwright test",
     "size-limit": "size-limit",
     "bundle:analyze": "node scripts/bundle-analysis.mjs",
     "bundle:check": "npm run build && npm run bundle:analyze",
@@ -32,8 +33,8 @@
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "release": "semantic-release",
-    "release:dry-run": "semantic-release --dry-run",
+    "release": "npx --yes semantic-release",
+    "release:dry-run": "npx --yes semantic-release --dry-run",
     "test:a11y": "vitest run --project !storybook src/__tests__/a11y/",
     "audit:ci": "node scripts/audit-check.mjs",
     "sri:generate": "node scripts/generate-sri.mjs",
@@ -41,7 +42,13 @@
     "sri:check": "node scripts/generate-sri.mjs --check",
     "unused-exports:check": "node scripts/check-unused-exports.mjs",
     "unused-exports:update-baseline": "node scripts/check-unused-exports.mjs --update-baseline",
-    "images:check": "node scripts/optimize-images.mjs"
+    "images:check": "node scripts/optimize-images.mjs",
+    "check-duplicates": "node scripts/check-duplicates.mjs"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom",
+    "three": "0.170.0"
   },
   "dependencies": {
     "@albedo-link/intent": "^0.13.0",
@@ -62,6 +69,7 @@
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^6.30.1",
+    "three": "0.170.0",
     "vite-plugin-pwa": "^1.3.0",
     "workbox-window": "^7.4.1"
   },
@@ -118,5 +126,8 @@
     "typescript-eslint": "^8.48.0",
     "vite": "^7.3.1",
     "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "use-sync-external-store": "^1.4.0"
   }
 }

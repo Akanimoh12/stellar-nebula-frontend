@@ -1,4 +1,16 @@
 import type { Preview } from '@storybook/react-vite'
+import { Buffer } from 'buffer'
+
+const globalScope = globalThis as unknown as { Buffer?: typeof Buffer }
+if (typeof globalScope.Buffer === 'undefined') {
+  globalScope.Buffer = Buffer
+}
+if (typeof window !== 'undefined') {
+  const windowScope = window as unknown as { Buffer?: typeof Buffer }
+  if (typeof windowScope.Buffer === 'undefined') {
+    windowScope.Buffer = Buffer
+  }
+}
 
 const preview: Preview = {
   parameters: {

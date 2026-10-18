@@ -22,6 +22,7 @@ const NebulaView = lazy(() => import('../pages/NebulaView'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 const ShipDashboard = lazy(() => import('../pages/ShipDashboard'))
 const LeaderboardPage = lazy(() => import('../pages/LeaderboardPage'))
+const OfflinePage = lazy(() => import('../pages/OfflinePage'))
 
 /** Default fallback kept for the root Suspense boundary */
 const defaultFallback = (
@@ -105,6 +106,10 @@ export const router = createBrowserRouter([
       {
         path: 'leaderboard',
         element: withPageBoundary(<LeaderboardPage />, 'Leaderboard', <SkeletonLeaderboard />),
+      },
+      {
+        path: 'offline',
+        element: withPageBoundary(<OfflinePage />, 'Offline Mode'),
       },
       {
         path: '*',

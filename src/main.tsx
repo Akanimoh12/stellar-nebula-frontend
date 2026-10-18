@@ -1,10 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import * as Sentry from '@sentry/react'
 import './index.css'
 import './styles/base.css'
 import './styles/mobile.css'
-import { initErrorTracking } from './services/errorTracking'
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary'
 import { logger } from './services/logging'
 import { initializeMonitoring } from './services/monitoring'
 import { repairCorruptedSaveData } from './services/saveLoad'
@@ -37,9 +36,13 @@ logger.info('Application starting', {
   appName: env.APP_NAME,
 })
 
-// Initialize monitoring services (Sentry + LogRocket)
+// Initialize monitoring services (Sentry + LogRocket). Not awaited: Sentry and
+// LogRocket are loaded via dynamic import (see services/sentryClient.ts) in
+// their own async chunk so they never block the initial render (#382). Any
+// errors thrown before this resolves are still caught by the ErrorBoundary
+// below and queued for Sentry once it finishes loading.
 if (env.ENABLE_MONITORING) {
-  initializeMonitoring({
+  void initializeMonitoring({
     sentryDsn: env.SENTRY_DSN,
     sentryEnvironment: env.NODE_ENV,
     sentryRelease: env.APP_VERSION,
@@ -48,16 +51,6 @@ if (env.ENABLE_MONITORING) {
     sentryReplayErrorRate: 1.0,
     logRocketAppId: env.LOGROCKET_APP_ID,
     enablePerformanceMonitoring: true,
-  })
-}
-
-// Also initialize Sentry directly for backward compatibility with existing error tracking setup
-const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN
-if (SENTRY_DSN) {
-  initErrorTracking({
-    dsn: SENTRY_DSN,
-    environment: import.meta.env.VITE_APP_ENV ?? 'development',
-    release: import.meta.env.VITE_APP_VERSION || undefined,
   })
 }
 
@@ -74,8 +67,8 @@ const { default: App } = await import('./App.tsx')
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={<p>An unexpected error occurred.</p>}>
+    <ErrorBoundary fallback={<p>An unexpected error occurred.</p>}>
       <App />
-    </Sentry.ErrorBoundary>
+    </ErrorBoundary>
   </StrictMode>
 )

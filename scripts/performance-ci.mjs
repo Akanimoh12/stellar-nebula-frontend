@@ -1,18 +1,57 @@
 import { spawn } from 'node:child_process'
+import { existsSync, mkdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 
+const isWindows = process.platform === 'win32'
 const previewPort = 4173
 const previewUrl = `http://127.0.0.1:${previewPort}`
+
+// Ensure reports output directory exists
+const reportDir = resolve(process.cwd(), '.lighthouseci')
+if (!existsSync(reportDir)) {
+  mkdirSync(reportDir, { recursive: true })
+}
+
+// Ensure configuration path is resolved
+const configPath = existsSync(resolve(process.cwd(), '.lighthouserc.cjs'))
+  ? './.lighthouserc.cjs'
+  : existsSync(resolve(process.cwd(), 'lighthouse.config.js'))
+    ? './lighthouse.config.js'
+    : './.lighthouserc.cjs'
 
 const preview = spawn(
   'npx',
   ['vite', 'preview', '--host', '127.0.0.1', '--port', String(previewPort)],
   {
     stdio: 'ignore',
-    detached: true,
+    detached: !isWindows,
+    shell: isWindows,
   }
 )
 
 preview.unref()
+
+function killPreview() {
+  try {
+    if (preview && preview.pid) {
+      if (isWindows) {
+        spawn('taskkill', ['/pid', String(preview.pid), '/T', '/F'], { stdio: 'ignore' })
+      } else {
+        preview.kill('SIGTERM')
+      }
+    }
+  } catch {}
+}
+
+process.on('SIGINT', () => {
+  killPreview()
+  process.exit(130)
+})
+
+process.on('SIGTERM', () => {
+  killPreview()
+  process.exit(143)
+})
 
 async function waitForPreview(maxWaitMs = 180000) {
   const startedAt = Date.now()
@@ -36,7 +75,7 @@ try {
   // its puppeteer/proxy chain carries advisories, and only this job needs it.
   const lighthouse = spawn(
     'npx',
-    ['--yes', '@lhci/cli@0.15.1', 'autorun', '--config', './.lighthouserc.cjs'],
+    ['--yes', '@lhci/cli@0.15.1', 'autorun', `--config=${configPath}`],
     {
       stdio: 'inherit',
       shell: true,
@@ -44,11 +83,17 @@ try {
   )
 
   lighthouse.on('exit', (code) => {
-    preview.kill('SIGTERM')
+    killPreview()
     process.exit(code ?? 1)
   })
+
+  lighthouse.on('error', (err) => {
+    console.error('Failed to run Lighthouse CI:', err)
+    killPreview()
+    process.exit(1)
+  })
 } catch (error) {
-  preview.kill('SIGTERM')
+  killPreview()
   console.error(error)
   process.exit(1)
 }

@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 env:
   NODE_VERSION: 20
@@ -56,6 +57,7 @@ jobs:
         run: npm ci
 
       - name: Build and run Lighthouse CI
+        id: lighthouse
         run: npm run performance:ci
 
       - name: Upload Lighthouse reports
@@ -66,12 +68,36 @@ jobs:
           path: .lighthouseci
           if-no-files-found: warn
 
-      - name: Assert Lighthouse budgets
-        if: github.event_name == 'pull_request'
+      # Renders actual-vs-budget numbers from the Lighthouse run into markdown.
+      # Runs even if the step above failed (that's the enforcement; this is
+      # just making the failure readable) - see scripts/lighthouse-budget-report.mjs.
+      - name: Generate Lighthouse budget report
+        if: always()
+        run: node scripts/lighthouse-budget-report.mjs --out lighthouse-report.md
+
+      - name: Comment Lighthouse budget report on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- lighthouse-budget-report -->';
+            let body = marker + '\n' + fs.readFileSync('lighthouse-report.md', 'utf8');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Fail if Lighthouse budgets were violated
+        if: always()
         run: |
-          # Fail the workflow if Lighthouse CI assertions failed
-          if [ -f .lighthouseci/lhr-*.json ]; then
-            echo "Lighthouse reports generated successfully"
-          else
-            echo "WARNING: No Lighthouse reports found"
+          if [ "${{ steps.lighthouse.outcome }}" != "success" ]; then
+            echo "::error::Lighthouse CI reported a budget violation (see the budget report comment/artifact)."
+            exit 1
           fi

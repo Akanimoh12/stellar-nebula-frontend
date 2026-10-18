@@ -80,7 +80,7 @@ export async function fetchTrustlineStatus(
   asset: TrustlineAsset,
   config?: StellarNetworkConfig
 ): Promise<TrustlineStatus> {
-  const horizon = createHorizonServer(config ?? getActiveStellarConfig())
+  const horizon = await createHorizonServer(config ?? getActiveStellarConfig())
   const account = await horizon.accounts().accountId(accountId).call()
   const balances = account.balances as Array<{
     asset_type: string
@@ -121,7 +121,7 @@ export async function buildTrustlineTransaction(
   config?: StellarNetworkConfig
 ): Promise<TrustlineBuildResult> {
   const activeConfig = config ?? getActiveStellarConfig()
-  const horizon = createHorizonServer(activeConfig)
+  const horizon = await createHorizonServer(activeConfig)
   const account = await horizon.loadAccount(sourcePublicKey)
   const transaction = new TransactionBuilder(account, {
     fee: BASE_FEE,
@@ -148,7 +148,7 @@ export async function submitTrustlineTransaction(
   config?: StellarNetworkConfig
 ): Promise<unknown> {
   const activeConfig = config ?? getActiveStellarConfig()
-  const horizon = createHorizonServer(activeConfig)
+  const horizon = await createHorizonServer(activeConfig)
   const transaction = TransactionBuilder.fromXDR(signedXdr, activeConfig.networkPassphrase)
   return horizon.submitTransaction(transaction)
 }

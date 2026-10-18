@@ -69,7 +69,7 @@ function classifySnapshot(stats: FeeStats, previous?: FeeStats): GasPriceSnapsho
 export async function fetchGasPriceSnapshot(
   config: StellarNetworkConfig = getActiveStellarConfig()
 ): Promise<GasPriceSnapshot> {
-  const rpcServer = createStellarRpcServer(config)
+  const rpcServer = await createStellarRpcServer(config)
   const rawStats = (await rpcServer.getFeeStats()) as unknown as Record<string, unknown>
   const stats: FeeStats = {
     p10: readPercentile(rawStats, 'p10', 100),
@@ -112,14 +112,22 @@ export function startGasPriceMonitor(options: GasMonitorOptions): () => void {
  * // later: monitor.stop()
  */
 export function createGasMonitor(config: GasMonitorConfig) {
-  const rpcServer = createStellarRpcServer(config.networkConfig ?? getActiveStellarConfig())
+  let rpcServer: Awaited<ReturnType<typeof createStellarRpcServer>> | null = null
   let intervalId: ReturnType<typeof setInterval> | null = null
   let history: FeeStats[] = []
   const MAX_HISTORY = 10
 
+  async function getServer() {
+    if (!rpcServer) {
+      rpcServer = await createStellarRpcServer(config.networkConfig ?? getActiveStellarConfig())
+    }
+    return rpcServer
+  }
+
   async function poll(): Promise<void> {
     try {
-      const rawStats = await rpcServer.getFeeStats()
+      const server = await getServer()
+      const rawStats = await server.getFeeStats()
       const record = rawStats as unknown as Record<string, unknown>
 
       const soroban = record.soroban as Record<string, unknown> | undefined

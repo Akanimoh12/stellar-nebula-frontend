@@ -1,4 +1,4 @@
-import { Horizon, Networks, rpc } from '@stellar/stellar-sdk'
+import type { Horizon, rpc } from '@stellar/stellar-sdk'
 
 export type StellarNetwork = 'testnet' | 'futurenet' | 'mainnet'
 
@@ -38,10 +38,7 @@ export interface StellarConnectionStatus {
  * specific network. Preferred over the generic contract-ID variables so each
  * network (testnet / futurenet / mainnet) can target its own deployment.
  */
-const CONTRACT_ID_ENV_KEYS: Record<
-  StellarNetwork,
-  { nebula: string; token: string }
-> = {
+const CONTRACT_ID_ENV_KEYS: Record<StellarNetwork, { nebula: string; token: string }> = {
   testnet: {
     nebula: 'VITE_NEBULA_CONTRACT_ID_TESTNET',
     token: 'VITE_TOKEN_CONTRACT_ID_TESTNET',
@@ -63,9 +60,19 @@ function readContractId(network: StellarNetwork, kind: 'nebula' | 'token'): stri
     return networkSpecific
   }
 
-  const generic = import.meta.env[kind === 'nebula' ? 'VITE_NEBULA_CONTRACT_ID' : 'VITE_TOKEN_CONTRACT_ID']
+  const generic = import.meta.env[
+    kind === 'nebula' ? 'VITE_NEBULA_CONTRACT_ID' : 'VITE_TOKEN_CONTRACT_ID'
+  ]
   return typeof generic === 'string' ? generic : ''
 }
+
+// Network passphrases hard-coded to avoid statically importing @stellar/stellar-sdk
+// in the initial bundle. Values mirror the `Networks` enum from the SDK.
+const NETWORK_PASSPHRASES = {
+  TESTNET: 'Test SDF Network ; September 2015',
+  FUTURENET: 'Test SDF Future Network ; October 2022',
+  PUBLIC: 'Public Global Stellar Network ; September 2015',
+} as const
 
 /** Preconfigured Stellar network definitions. */
 export const STELLAR_NETWORK_CONFIGS: Record<StellarNetwork, StellarNetworkConfig> = {
@@ -73,7 +80,7 @@ export const STELLAR_NETWORK_CONFIGS: Record<StellarNetwork, StellarNetworkConfi
     network: 'testnet',
     rpcUrl: 'https://soroban-testnet.stellar.org',
     horizonUrl: 'https://horizon-testnet.stellar.org',
-    networkPassphrase: Networks.TESTNET,
+    networkPassphrase: NETWORK_PASSPHRASES.TESTNET,
     nebulaContractId: readContractId('testnet', 'nebula'),
     tokenContractId: readContractId('testnet', 'token'),
   },
@@ -81,7 +88,7 @@ export const STELLAR_NETWORK_CONFIGS: Record<StellarNetwork, StellarNetworkConfi
     network: 'futurenet',
     rpcUrl: 'https://rpc-futurenet.stellar.org',
     horizonUrl: 'https://horizon-futurenet.stellar.org',
-    networkPassphrase: Networks.FUTURENET,
+    networkPassphrase: NETWORK_PASSPHRASES.FUTURENET,
     nebulaContractId: readContractId('futurenet', 'nebula'),
     tokenContractId: readContractId('futurenet', 'token'),
   },
@@ -89,7 +96,7 @@ export const STELLAR_NETWORK_CONFIGS: Record<StellarNetwork, StellarNetworkConfi
     network: 'mainnet',
     rpcUrl: 'https://soroban-rpc.stellar.org',
     horizonUrl: 'https://horizon.stellar.org',
-    networkPassphrase: Networks.PUBLIC,
+    networkPassphrase: NETWORK_PASSPHRASES.PUBLIC,
     nebulaContractId: readContractId('mainnet', 'nebula'),
     tokenContractId: readContractId('mainnet', 'token'),
   },
@@ -137,16 +144,18 @@ export function getActiveStellarConfig(
 }
 
 /** Create a Soroban RPC server client. */
-export function createStellarRpcServer(
+export async function createStellarRpcServer(
   config: StellarNetworkConfig = getActiveStellarConfig()
-): rpc.Server {
+): Promise<rpc.Server> {
+  const { rpc } = await import('@stellar/stellar-sdk')
   return new rpc.Server(config.rpcUrl)
 }
 
 /** Create a Horizon server client. */
-export function createHorizonServer(
+export async function createHorizonServer(
   config: StellarNetworkConfig = getActiveStellarConfig()
-): Horizon.Server {
+): Promise<Horizon.Server> {
+  const { Horizon } = await import('@stellar/stellar-sdk')
   return new Horizon.Server(config.horizonUrl)
 }
 
@@ -159,15 +168,17 @@ export function createHorizonServer(
  */
 export async function checkStellarConnection(
   config: StellarNetworkConfig = getActiveStellarConfig(),
-  clients: StellarConnectionClients = {
-    rpcServer: createStellarRpcServer(config),
-    horizonServer: createHorizonServer(config),
-  }
+  clients?: StellarConnectionClients
 ): Promise<StellarConnectionStatus> {
+  const resolvedClients = clients ?? {
+    rpcServer: await createStellarRpcServer(config),
+    horizonServer: await createHorizonServer(config),
+  }
+
   const [health, networkInfo] = await Promise.all([
-    clients.rpcServer.getHealth(),
-    clients.rpcServer.getNetwork(),
-    clients.horizonServer.root(),
+    resolvedClients.rpcServer.getHealth(),
+    resolvedClients.rpcServer.getNetwork(),
+    resolvedClients.horizonServer.root(),
   ])
 
   return {

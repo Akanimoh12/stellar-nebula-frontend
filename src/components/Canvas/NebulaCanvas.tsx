@@ -1,4 +1,4 @@
-import { Suspense, useMemo, useState, useCallback, useRef, useEffect } from 'react'
+import { Suspense, memo, useMemo, useState, useCallback, useRef, useEffect } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Preload } from '@react-three/drei'
 import { disposeThreeObject } from '@/utils/threejs/cleanup'
@@ -77,7 +77,7 @@ function createInitialRng() {
   return createRNG(Date.now())
 }
 
-export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
+function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
   const bloomEnabled = useGraphicsStore((state) => state.bloomEnabled)
   const bloomIntensity = useGraphicsStore((state) => state.bloomIntensity)
   const performanceMode = useGraphicsStore((state) => state.performanceMode)
@@ -93,10 +93,16 @@ export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasPr
   const scanRngRef = useRef(createInitialRng())
   const wrapperRef = useRef<HTMLDivElement>(null)
 
-  const remainingSecondsMap: Record<string, number> = {}
-  for (const point of SCAN_POINTS_META) {
-    remainingSecondsMap[point.id] = getRemainingSeconds(point.id)
-  }
+  // Memoize remainingSecondsMap to avoid creating a new object on every render.
+  // The object is rebuilt only when scanCooldowns change (tracked via the hook).
+  const remainingSecondsMap: Record<string, number> = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const point of SCAN_POINTS_META) {
+      map[point.id] = getRemainingSeconds(point.id)
+    }
+    return map
+    // getRemainingSeconds is stable when scanCooldowns haven't changed
+  }, [getRemainingSeconds])
 
   const deviceHints = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -473,3 +479,9 @@ export function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasPr
     </div>
   )
 }
+
+// Wrap in React.memo to prevent unnecessary re-renders when parent components
+// re-render but the canvas props haven't changed.
+const MemoizedNebulaCanvas = memo(NebulaCanvas)
+
+export { MemoizedNebulaCanvas as NebulaCanvas }

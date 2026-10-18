@@ -15,7 +15,7 @@ export async function simulateContractTransaction<T = unknown>(
   options: SimulateContractTransactionOptions = {}
 ): Promise<ParsedSimulationResult<T>> {
   const config = options.config ?? getActiveStellarConfig()
-  const rpcServer = createStellarRpcServer(config) as rpc.Server & {
+  const rpcServer = (await createStellarRpcServer(config)) as rpc.Server & {
     simulateTransaction: (params: Record<string, unknown>) => Promise<unknown>
   }
 

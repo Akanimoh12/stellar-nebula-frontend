@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
+import { AdditiveBlending, BufferAttribute, BufferGeometry, ShaderMaterial } from 'three'
+import type { Points } from 'three'
 import type { NebulaGeometry } from '@/utils/procedural/nebula'
 import { nebulaVertexShader, nebulaFragmentShader } from './shaders'
 
@@ -13,21 +14,21 @@ export function ProceduralNebulaField({
   geometry,
   performanceMode = false,
 }: ProceduralNebulaFieldProps) {
-  const pointsRef = useRef<THREE.Points>(null)
+  const pointsRef = useRef<Points>(null)
   const timeRef = useRef(0)
 
   const bufferGeometry = useMemo(() => {
-    const geom = new THREE.BufferGeometry()
-    geom.setAttribute('position', new THREE.BufferAttribute(geometry.positions, 3))
-    geom.setAttribute('color', new THREE.BufferAttribute(geometry.colors, 3))
-    geom.setAttribute('size', new THREE.BufferAttribute(geometry.sizes, 1))
-    geom.setAttribute('opacity', new THREE.BufferAttribute(geometry.opacities, 1))
+    const geom = new BufferGeometry()
+    geom.setAttribute('position', new BufferAttribute(geometry.positions, 3))
+    geom.setAttribute('color', new BufferAttribute(geometry.colors, 3))
+    geom.setAttribute('size', new BufferAttribute(geometry.sizes, 1))
+    geom.setAttribute('opacity', new BufferAttribute(geometry.opacities, 1))
     geom.computeBoundingSphere()
     return geom
   }, [geometry])
 
   const shaderMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
+    return new ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
       },
@@ -36,7 +37,7 @@ export function ProceduralNebulaField({
       transparent: true,
       depthWrite: false,
       vertexColors: true,
-      blending: THREE.AdditiveBlending,
+      blending: AdditiveBlending,
     })
   }, [])
 
@@ -49,7 +50,7 @@ export function ProceduralNebulaField({
   useFrame((_, delta) => {
     timeRef.current += delta
     if (pointsRef.current) {
-      const mat = pointsRef.current.material as THREE.ShaderMaterial
+      const mat = pointsRef.current.material as ShaderMaterial
       if (mat.uniforms?.uTime) {
         mat.uniforms.uTime.value = timeRef.current
       }

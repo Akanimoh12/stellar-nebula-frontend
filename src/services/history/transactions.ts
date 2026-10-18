@@ -112,7 +112,7 @@ export async function getTransactionHistory(
   options: TransactionHistoryOptions = {},
   config?: StellarNetworkConfig
 ): Promise<PaginatedTransactions> {
-  const horizon = createHorizonServer(config ?? getActiveStellarConfig())
+  const horizon = await createHorizonServer(config ?? getActiveStellarConfig())
   const { limit = 20, cursor, order = 'desc' } = options
 
   const builder = horizon.transactions().forAccount(accountId).limit(limit).order(order)
@@ -139,7 +139,7 @@ export async function loadTransactionHistoryPage(
   cursor?: string,
   limit = 8
 ): Promise<HistoryTransactionPage> {
-  const horizon = createHorizonServer(config ?? getActiveStellarConfig())
+  const horizon = await createHorizonServer(config ?? getActiveStellarConfig())
   const builder = horizon.transactions().forAccount(accountId).limit(limit).order('desc')
 
   if (cursor) {
@@ -163,7 +163,7 @@ export async function getTransactionByHash(
   hash: string,
   config?: StellarNetworkConfig
 ): Promise<StellarTransaction | null> {
-  const horizon = createHorizonServer(config ?? getActiveStellarConfig())
+  const horizon = await createHorizonServer(config ?? getActiveStellarConfig())
 
   try {
     const response = await horizon.transactions().transaction(hash).call()

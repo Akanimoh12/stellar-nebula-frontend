@@ -71,7 +71,7 @@ function getNetworkCondition(baseFee: number): FeeEstimateResult['networkConditi
  */
 export async function estimateTransactionFee(input: FeeEstimateInput): Promise<FeeEstimateResult> {
   const config = getActiveStellarConfig()
-  const rpcServer = createStellarRpcServer(config)
+  const rpcServer = await createStellarRpcServer(config)
 
   let baseFeeStroops = 100
 

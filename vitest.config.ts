@@ -52,6 +52,12 @@ export default defineConfig({
           testTimeout: 15000,
           include: ['src/**/*.{test,spec}.{ts,tsx}', 'test/**/*.{test,spec}.{ts,tsx}'],
           exclude: [...configDefaults.exclude, 'e2e/**', 'src/**/*.stories.{ts,tsx}'],
+          // Automatically restore mocks, stubs, and environment between tests
+          // so leftover state from one test never leaks into another (#421).
+          restoreMocks: true,
+          clearMocks: true,
+          unstubEnvs: true,
+          unstubGlobals: true,
           // `src/config/env.ts` validates these at import time, so without them any
           // suite that imports the API client fails to load. Non-secret test values;
           // tests that exercise validation stub their own.

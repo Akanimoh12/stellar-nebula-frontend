@@ -69,3 +69,21 @@ npm run performance:test
 # Coverage report
 npm run test:coverage
 ```
+
+## Storage Cleanup Between Tests (#421)
+
+`src/test/setup.ts` automatically clears `localStorage` and `sessionStorage` in an `afterEach` hook so that **no test leaks persisted state into the next test**. This eliminates a class of flaky failures caused by test ordering.
+
+### What the setup does
+
+1. **`localStorage.clear()`** — empties the in-memory shim every test uses.
+2. **`sessionStorage.clear()`** — cleaned for parity (guarded against environments where it does not exist).
+3. **`restoreMocks` / `clearMocks`** — configured in `vitest.config.ts` so `vi.fn()` / `vi.spyOn()` state is restored automatically.
+4. **`unstubEnvs` / `unstubGlobals`** — any `vi.stubEnv()` or `vi.stubGlobal()` call is undone between tests.
+
+### Guidelines
+
+- **Do not** rely on `localStorage` values set by a previous test.
+- If a test _must_ seed storage, do so in its own `beforeEach` or inline setup — it will be cleared after the test completes.
+- You may still call `localStorage.clear()` explicitly if a test wants a clean slate at a precise point _within_ its body, but there is no need to add it to `beforeEach` / `afterEach` — the global hook handles it.
+

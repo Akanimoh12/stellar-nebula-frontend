@@ -124,7 +124,7 @@ function getFeeWarning(feeStroops: number): FeeWarning {
 }
 
 async function fetchCurrentBaseFee(config: StellarNetworkConfig): Promise<number> {
-  const server = createStellarRpcServer(config)
+  const server = await createStellarRpcServer(config)
 
   try {
     const feeStats = await server.getFeeStats()
@@ -164,7 +164,7 @@ async function fetchCurrentBaseFee(config: StellarNetworkConfig): Promise<number
 async function detectFeeTrend(
   config: StellarNetworkConfig
 ): Promise<GasEstimateResult['feeTrend']> {
-  const server = createStellarRpcServer(config)
+  const server = await createStellarRpcServer(config)
 
   try {
     // Quick check: fetch fee stats and compare p50 vs p95 spread
@@ -267,7 +267,7 @@ export async function estimateSorobanGas(
   options: GasEstimateOptions = {}
 ): Promise<GasEstimateResult> {
   const config = options.config ?? getActiveStellarConfig()
-  const server = createStellarRpcServer(config)
+  const server = await createStellarRpcServer(config)
 
   try {
     const account = await server.getAccount(callerPubKey)

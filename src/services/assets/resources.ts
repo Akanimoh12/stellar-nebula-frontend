@@ -90,7 +90,7 @@ export async function fetchResourceAssetSnapshot(
     if (cached !== null) return cached
   }
 
-  const horizon = createHorizonServer(config ?? getActiveStellarConfig())
+  const horizon = await createHorizonServer(config ?? getActiveStellarConfig())
   const response = await horizon.accounts().accountId(accountId).call()
 
   const snapshot: ResourceAssetSnapshot = {

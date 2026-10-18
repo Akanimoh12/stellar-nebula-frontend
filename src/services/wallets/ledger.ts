@@ -1,7 +1,6 @@
 import TransportWebUSB from '@ledgerhq/hw-transport-webusb'
 import Str from '@ledgerhq/hw-app-str'
 import { Buffer } from 'buffer'
-import { Keypair, StrKey, TransactionBuilder } from '@stellar/stellar-sdk'
 import type { PublicKey, StellarNetwork, XDR } from '@/types'
 
 const LEDGER_STELLAR_PATH = "44'/148'/0'"
@@ -53,6 +52,7 @@ export async function connectLedger(): Promise<PublicKey> {
 
   try {
     const { rawPublicKey } = await app.getPublicKey(LEDGER_STELLAR_PATH, true)
+    const { StrKey } = await import('@stellar/stellar-sdk')
     return StrKey.encodeEd25519PublicKey(rawPublicKey)
   } catch (error) {
     throw mapLedgerError(error, 'Failed to retrieve the Ledger public key.')
@@ -67,6 +67,7 @@ export async function signTransactionWithLedger(
   const app = await createLedgerApp()
 
   try {
+    const { Keypair, TransactionBuilder } = await import('@stellar/stellar-sdk')
     const transaction = TransactionBuilder.fromXDR(xdr, networkPassphrase)
     // stellar-sdk 17 returns a plain Uint8Array; the Ledger app API takes a Buffer.
     const { signature } = await app.signTransaction(

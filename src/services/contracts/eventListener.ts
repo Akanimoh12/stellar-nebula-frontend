@@ -109,11 +109,7 @@ function normalizeContractEvent(raw: unknown): ContractEventRecord {
  */
 export function startContractEventListener(options: ContractEventListenerOptions): () => void {
   const config = getActiveStellarConfig()
-  const horizon = createHorizonServer({
-    ...config,
-    horizonUrl: options.horizonUrl || config.horizonUrl,
-    rpcUrl: options.rpcUrl || config.rpcUrl,
-  })
+  let horizon: Awaited<ReturnType<typeof createHorizonServer>> | null = null
   const rpcServer = new StellarSdk.rpc.Server(options.rpcUrl || config.rpcUrl)
 
   let stopped = false
@@ -175,8 +171,16 @@ export function startContractEventListener(options: ContractEventListenerOptions
     }
   }
 
-  const openStream = () => {
+  const openStream = async () => {
     if (stopped) return
+
+    if (!horizon) {
+      horizon = await createHorizonServer({
+        ...config,
+        horizonUrl: options.horizonUrl || config.horizonUrl,
+        rpcUrl: options.rpcUrl || config.rpcUrl,
+      })
+    }
 
     const stream = (
       horizon as unknown as {
@@ -226,15 +230,12 @@ export function startContractEventListener(options: ContractEventListenerOptions
   const scheduleReconnect = () => {
     if (stopped || reconnectTimer) return
 
-    const delay = Math.min(
-      reconnectMaxDelayMs,
-      reconnectBaseDelayMs * 2 ** reconnectAttempt
-    )
+    const delay = Math.min(reconnectMaxDelayMs, reconnectBaseDelayMs * 2 ** reconnectAttempt)
     reconnectAttempt += 1
 
     reconnectTimer = setTimeout(() => {
       reconnectTimer = null
-      openStream()
+      void openStream()
     }, delay)
   }
 
@@ -242,7 +243,7 @@ export function startContractEventListener(options: ContractEventListenerOptions
     void fetchEvents()
   }, 8_000)
 
-  openStream()
+  void openStream()
   void fetchEvents()
 
   return () => {

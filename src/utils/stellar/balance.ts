@@ -127,7 +127,7 @@ export function useAccountBalances(
     setIsUnfunded(false)
 
     try {
-      const server = createHorizonServer(config)
+      const server = await createHorizonServer(config)
       const account = await server.accounts().accountId(accountId).call()
 
       const formatted = account.balances.map(formatBalance)
@@ -192,34 +192,36 @@ export function useAccountBalances(
 
     let closeStream: (() => void) | undefined
 
-    try {
-      const server = createHorizonServer(config)
+    void (async () => {
+      try {
+        const server = await createHorizonServer(config)
 
-      // Auto-refresh on transactions via Horizon streaming
-      closeStream = server
-        .payments()
-        .forAccount(accountId)
-        .cursor('now')
-        .stream({
-          onmessage: () => {
-            setIsStreaming(true)
-            void fetchBalances()
-          },
-          onerror: (err) => {
-            console.error('Error in payment stream:', err)
-            setIsStreaming(false)
-            // Attempt to reconnect after 5 seconds
-            setTimeout(() => {
-              void loadBalances()
-            }, 5000)
-          },
-        })
+        // Auto-refresh on transactions via Horizon streaming
+        closeStream = server
+          .payments()
+          .forAccount(accountId)
+          .cursor('now')
+          .stream({
+            onmessage: () => {
+              setIsStreaming(true)
+              void fetchBalances()
+            },
+            onerror: (err) => {
+              console.error('Error in payment stream:', err)
+              setIsStreaming(false)
+              // Attempt to reconnect after 5 seconds
+              setTimeout(() => {
+                void loadBalances()
+              }, 5000)
+            },
+          })
 
-      setIsStreaming(true)
-    } catch (err) {
-      console.error('Failed to setup stream', err)
-      setIsStreaming(false)
-    }
+        setIsStreaming(true)
+      } catch (err) {
+        console.error('Failed to setup stream', err)
+        setIsStreaming(false)
+      }
+    })()
 
     return () => {
       if (closeStream) {

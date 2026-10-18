@@ -98,7 +98,7 @@ export async function queryContractVersion(
   config: StellarNetworkConfig = getActiveStellarConfig()
 ): Promise<string | null> {
   try {
-    const server = createStellarRpcServer(config)
+    const server = await createStellarRpcServer(config)
     const key = xdr.ScVal.scvBytes(new TextEncoder().encode('__version'))
     const response = await server.getContractData(contractId, key, rpc.Durability.Persistent)
 

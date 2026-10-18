@@ -9,6 +9,33 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.logrocket.io https://*.stellar.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://*.stellar.org wss://*.stellar.org https://*.sentry.io https://*.logrocket.io https://cdn.logrocket.io http://localhost:* ws://localhost:* wss://*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self';"
     />
+    <!-- Preconnect to critical third-party origins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+    <!-- Preload critical fonts and icons to reduce LCP and eliminate CLS -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      />
+    </noscript>
+
+    <link rel="preload" as="image" href="/vite.svg" type="image/svg+xml" />
+
     <!-- LogRocket Session Replay - Load early for maximum coverage (with SRI) -->
     <!-- SRI hash auto-generated via `node scripts/generate-sri.mjs --update` -->
     <script>

@@ -94,7 +94,8 @@ export function TransactionHistory({
   const canLoadMore = useMemo(() => Boolean(nextHref), [nextHref])
 
   // The rows to mount, given the current scroll position and how much is visible.
-  const window = useMemo(
+  // Not named `window`: that would shadow the global the effects below rely on.
+  const rowWindow = useMemo(
     () => computeRowWindow({ scrollTop, viewportHeight, count: transactions.length }),
     [scrollTop, transactions.length, viewportHeight]
   )
@@ -161,26 +162,32 @@ export function TransactionHistory({
       {transactions.length === 0 && !isLoading ? (
         <EmptyTransactions compact />
       ) : (
-        <div
-          style={scrollStyle}
-          ref={scrollRef}
-          onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
-        >
-          <div style={listStyle}>
-            {/* Placeholders for the rows that are not mounted, so the scrollbar
+        <>
+          <div
+            style={scrollStyle}
+            ref={scrollRef}
+            onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+          >
+            <div style={listStyle}>
+              {/* Placeholders for the rows that are not mounted, so the scrollbar
                 still reflects the whole list. */}
-            {window.padTop > 0 && <div style={spacerStyle(window.padTop)} aria-hidden="true" />}
-            {transactions.slice(window.start, window.end).map((tx) => (
-              <TransactionItem key={tx.hash} tx={tx} />
-            ))}
-            {window.padBottom > 0 && <div style={spacerStyle(window.padBottom)} aria-hidden="true" />}
+              {rowWindow.padTop > 0 && (
+                <div style={spacerStyle(rowWindow.padTop)} aria-hidden="true" />
+              )}
+              {transactions.slice(rowWindow.start, rowWindow.end).map((tx) => (
+                <TransactionItem key={tx.hash} tx={tx} />
+              ))}
+              {rowWindow.padBottom > 0 && (
+                <div style={spacerStyle(rowWindow.padBottom)} aria-hidden="true" />
+              )}
+            </div>
           </div>
-        </div>
-        {viewportHeight === 0 && (
-          // Measured after mount; before that the window cannot know how much is
-          // visible, so every row is mounted once to establish the height.
-          <ViewportProbe onMeasured={setViewportHeight} targetRef={scrollRef} />
-        )}
+          {viewportHeight === 0 && (
+            // Measured after mount; before that the window cannot know how much is
+            // visible, so every row is mounted once to establish the height.
+            <ViewportProbe onMeasured={setViewportHeight} targetRef={scrollRef} />
+          )}
+        </>
       )}
 
       <div style={actionsStyle}>
@@ -257,7 +264,7 @@ const scrollStyle: CSSProperties = {
   maxHeight: 640,
   overflowY: 'auto',
   // Keeps a scrollbar on platforms that overlay it, so the list looks scrollable.
-  overflowAnchor: 'none'
+  overflowAnchor: 'none',
 }
 
 const spacerStyle = (height: number): CSSProperties => ({ height })
@@ -270,7 +277,7 @@ const spacerStyle = (height: number): CSSProperties => ({ height })
  */
 function ViewportProbe({
   targetRef,
-  onMeasured
+  onMeasured,
 }: {
   targetRef: React.RefObject<HTMLDivElement | null>
   onMeasured: (height: number) => void

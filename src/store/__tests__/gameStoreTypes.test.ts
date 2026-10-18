@@ -20,7 +20,8 @@ import {
 /** Compile-time assertion helper: fails the type check if T is not exactly U. */
 type Expect<T extends U, U> = T
 
-type _StateShape = Expect<
+// Exported so the compile-time assertions count as used.
+export type _StateShape = Expect<
   {
     lockedOperations: Record<string, boolean>
     operationQueue: ActiveOperation[]
@@ -29,12 +30,10 @@ type _StateShape = Expect<
   Pick<GameState, 'lockedOperations' | 'operationQueue' | 'pendingState'>
 >
 
-type _ActionsShape = Expect<
-  Pick<
-    GameActions,
-    'acquireLock' | 'releaseLock' | 'queueOperation' | 'startOperationWithLock'
-  >,
-  GameActions
+// GameActions must carry every locking action (the Pick fails if one is missing).
+export type _ActionsShape = Expect<
+  GameActions,
+  Pick<GameActions, 'acquireLock' | 'releaseLock' | 'queueOperation' | 'startOperationWithLock'>
 >
 
 const LOCKING_ACTIONS = [

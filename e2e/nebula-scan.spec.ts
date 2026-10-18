@@ -18,7 +18,7 @@ test.describe('Nebula scan page (POM)', () => {
     await expect(nebula.heading).toBeVisible()
   })
 
-  test('shows nebula canvas element', async ({ page }) => {
+  test('shows nebula canvas element', async () => {
     await nebula.goto()
     await nebula.waitForCanvas()
     await expect(nebula.canvas).toBeVisible()
@@ -103,7 +103,6 @@ walletTest.describe('Nebula scan — with wallet (POM)', () => {
       await nebula.goto()
       await nebula.waitForCanvas()
 
-      const before = await nebula.getHarvestTotals().catch(() => ({}))
       await nebula.scanAnomaly()
       // Totals may update optimistically; at least page remains stable
       await expect(nebula.harvestLog).toBeVisible()

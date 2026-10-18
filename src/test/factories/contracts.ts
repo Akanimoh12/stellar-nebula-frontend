@@ -362,5 +362,5 @@ export function buildContractBatch<T>(
   count = 5,
   overrides: Partial<T> = {}
 ): T[] {
-  return Array.from({ length: count }, () => builder(overrides as any))
+  return Array.from({ length: count }, () => builder(overrides))
 }

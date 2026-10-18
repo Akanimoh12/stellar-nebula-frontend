@@ -4,6 +4,21 @@ import { resolve } from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
 
+/**
+ * Runtime dependencies of @stellar/stellar-sdk 17 that only the SDK uses.
+ * (`@noble/hashes` is left out on purpose: WalletConnect bundles its own copies, and
+ * claiming them here would make the wallet chunk import the whole Stellar chunk.)
+ */
+const STELLAR_SDK_DEPENDENCIES = [
+  '@exodus/bytes',
+  '@noble/ed25519',
+  'bignumber.js',
+  'eventsource',
+  'feaxios',
+  'smol-toml',
+  'uint8array-extras',
+]
+
 export default defineConfig({
   plugins: [
     react(),
@@ -14,7 +29,7 @@ export default defineConfig({
       brotliSize: true,
       template: 'raw-data',
       sourcemap: true,
-    } as any),
+    }),
     VitePWA({
       // 'prompt' (not 'autoUpdate'): the plugin only readies the new service
       // worker and lets the app decide when to activate it, so the update
@@ -155,6 +170,13 @@ export default defineConfig({
               return 'feature-three'
             }
             if (id.includes('@stellar') || id.includes('@albedo-link')) {
+              return 'feature-stellar'
+            }
+            // stellar-sdk 17 no longer inlines its crypto/XDR/encoding helpers into
+            // @stellar/stellar-base; they are separate packages now. Keep them in the
+            // Stellar feature chunk so they load with the SDK instead of growing the
+            // vendor chunk every page downloads.
+            if (STELLAR_SDK_DEPENDENCIES.some((dep) => id.includes(`/node_modules/${dep}/`))) {
               return 'feature-stellar'
             }
             if (id.includes('react') || id.includes('react-router') || id.includes('react-dom')) {

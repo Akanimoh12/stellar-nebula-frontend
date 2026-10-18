@@ -3,7 +3,9 @@ import { render, screen } from '../../../test/utils'
 import { WalletProvider } from '../../../contexts/WalletContext'
 import Footer from '../Footer'
 
-vi.mock('@services/wallets', () => ({
+vi.mock('@services/wallets', async () => ({
+  // Complete mock so a newly added wallet export cannot break this suite.
+  ...(await (await import('@/test/mocks/walletServices')).createWalletServicesMock()),
   isFreighterInstalled: vi.fn().mockResolvedValue(false),
   isLedgerAvailable: vi.fn().mockResolvedValue(false),
   connectLedger: vi.fn(),

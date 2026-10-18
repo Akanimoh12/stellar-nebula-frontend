@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { test as walletTest, connectWallet } from './fixtures/wallet'
+import { test as walletTest } from './fixtures/wallet'
 import { AppPage } from './pages/app.page'
 import { WalletPage } from './pages/wallet.page'
 import { NebulaPage } from './pages/nebula.page'

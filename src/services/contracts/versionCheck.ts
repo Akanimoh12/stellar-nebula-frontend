@@ -99,17 +99,19 @@ export async function queryContractVersion(
 ): Promise<string | null> {
   try {
     const server = createStellarRpcServer(config)
-    const key = xdr.ScVal.scvBytes(Buffer.from('__version'))
+    const key = xdr.ScVal.scvBytes(new TextEncoder().encode('__version'))
     const response = await server.getContractData(contractId, key, rpc.Durability.Persistent)
 
-    if (response && response.val) {
-      const contractData = response.val.contractData()
-      const scVal = contractData.val()
-      if (scVal.switch() === xdr.ScValType.scvBytes()) {
-        return new TextDecoder().decode(scVal.bytes())
+    // stellar-sdk 17 XDR values are discriminated unions: narrow on `type`, then
+    // read the variant's fields (the old `.contractData()` / `.switch()` accessors are gone).
+    const entry = response?.val
+    if (entry?.type === 'contractData') {
+      const scVal = entry.contractData.val
+      if (scVal.type === 'scvBytes') {
+        return new TextDecoder().decode(scVal.bytes.value)
       }
-      if (scVal.switch() === xdr.ScValType.scvString()) {
-        return scVal.str().toString()
+      if (scVal.type === 'scvString') {
+        return scVal.value
       }
     }
 

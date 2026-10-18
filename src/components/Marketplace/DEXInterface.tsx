@@ -111,6 +111,7 @@ export const DEXInterface: React.FC = () => {
 
         <div className="flex items-center gap-2 bg-space-900 p-2 rounded-lg border border-space-800">
           <select
+            aria-label="Base asset"
             value={baseAsset.code}
             onChange={(e) =>
               setBaseAsset(

@@ -45,6 +45,7 @@ export const AchievementList: React.FC = () => {
 
         <div className="flex gap-2">
           <select
+            aria-label="Filter achievements by status"
             value={filter}
             onChange={(e) => setFilter(e.target.value as 'all' | 'unlocked' | 'locked')}
             className="bg-space-800 border border-space-700 text-white rounded px-3 py-1.5 outline-none focus:border-cosmic-cyan"
@@ -55,6 +56,7 @@ export const AchievementList: React.FC = () => {
           </select>
 
           <select
+            aria-label="Sort achievements"
             value={sort}
             onChange={(e) => setSort(e.target.value as 'progress' | 'rarity')}
             className="bg-space-800 border border-space-700 text-white rounded px-3 py-1.5 outline-none focus:border-cosmic-cyan"

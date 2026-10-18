@@ -1,50 +1,50 @@
 version: 2
+# Automated dependency alerts and update PRs (#341).
+# Dependabot *security* updates (a PR as soon as an advisory is published) are
+# switched on in repository settings → Code security; the groups below control
+# how those PRs and the routine version updates are batched.
 updates:
-  # NPM dependency updates - daily with security prioritization
+  # NPM dependency updates - daily
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
       interval: 'daily'
       time: '03:00'
       timezone: 'UTC'
-    # Group updates for better organization and reduced noise
+    open-pull-requests-limit: 10
     groups:
-      # Security updates grouped separately for priority handling
+      # Security fixes grouped separately for priority handling
       security-updates:
-        dependency-type: 'security'
-        update-types:
-          - 'patch'
+        applies-to: security-updates
+        patterns:
+          - '*'
       # Development dependencies
       dev-dependencies:
+        applies-to: version-updates
         dependency-type: 'development'
         update-types:
           - 'minor'
           - 'patch'
       # Production minor and patch updates
       prod-updates:
+        applies-to: version-updates
         dependency-type: 'production'
         update-types:
-          - 'patch'
           - 'minor'
-    # Prioritize security updates by checking frequently
-    allow:
-      - dependency-type: 'security'
+          - 'patch'
     # Rebase strategy to keep PRs clean
     rebase-strategy: 'auto'
-    # Commit message configuration
     commit-message:
       prefix: 'chore'
       prefix-development: 'chore'
       include: 'scope'
-    # Labels for PR organization and filtering
     labels:
       - 'dependencies'
       - 'automation'
       - 'chore'
       - 'devops'
-    # Versioning strategy
-    versioning-strategy: 'semver'
-    # Open pull requests for out-of-range updates
+    # Raise the range in package.json only when the new version falls outside it
+    versioning-strategy: 'increase-if-necessary'
     pull-request-branch-name:
       separator: '/'
 
@@ -56,23 +56,17 @@ updates:
       day: 'monday'
       time: '02:00'
       timezone: 'UTC'
-    # Group all actions updates
     groups:
       github-actions:
         patterns:
           - '*'
-    # Commit message configuration for actions
     commit-message:
       prefix: 'ci'
       include: 'scope'
-    # Labels for CI/CD tracking
     labels:
       - 'ci/cd'
       - 'automation'
       - 'github-actions'
       - 'devops'
-    # Versioning strategy
-    versioning-strategy: 'semver'
-    # Open pull requests for out-of-range updates
     pull-request-branch-name:
       separator: '/'

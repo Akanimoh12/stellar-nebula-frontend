@@ -157,6 +157,16 @@ npm audit fix
 
 - RPC and Horizon URLs are externally configurable, so only trusted HTTPS endpoints should be used in deployment.
 
+## Subresource Integrity (SRI)
+
+External CDN scripts (currently LogRocket) are loaded with a `sha384` integrity hash and `crossorigin="anonymous"` so a compromised CDN cannot serve altered code.
+
+- `npm run sri:generate` fetches each CDN resource and prints its hash.
+- `npm run sri:update` writes the hashes into `index.html` and `src/utils/sri.ts`.
+- `npm run sri:check` verifies the committed hashes and runs in the `build` job of `ci.yml`.
+
+When a CDN resource changes upstream, run `npm run sri:update` and commit the result. To add a resource, add it to `CDN_RESOURCES` in `scripts/generate-sri.mjs` and `SRI_RESOURCES` in `src/utils/sri.ts`.
+
 ## Environment Variable Security
 
 - Environment variables are loaded through Vite and validated at runtime.

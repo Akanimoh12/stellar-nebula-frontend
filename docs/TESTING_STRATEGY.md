@@ -131,6 +131,12 @@ Wrap test components in the real `WalletProvider` / `NetworkProvider` and mock o
 - Use Vitest fake timers (`vi.useFakeTimers()`) for debounce, polling, and sync intervals.
 - Prefer `waitFor`/`findBy*` from Testing Library over arbitrary `setTimeout`.
 
+### Timeouts
+
+- Component and Three.js rendering tests run with `testTimeout` and `hookTimeout` of 30s (`vitest.config.ts`); the `test` job in `ci.yml` has a 20 minute limit.
+- Raise a single slow test with `it('...', async () => {...}, 60_000)` instead of increasing the global timeout.
+- Do not use longer timeouts to hide flakiness; fix the underlying wait with `waitFor`/`findBy*`.
+
 ### Good Practices
 
 - Never mock the unit under test.

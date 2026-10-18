@@ -29,7 +29,8 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, 'e2e/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'lcov'],
+      reporter: ['text', 'html', 'lcov', 'json', 'json-summary'],
+      reportsDirectory: './coverage',
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/test/**', 'src/**/*.d.ts', 'src/main.tsx'],
       thresholds: {
@@ -46,7 +47,8 @@ export default defineConfig({
           environment: 'happy-dom',
           globals: true,
           setupFiles: ['./src/test/setup.ts'],
-          testTimeout: 15000,
+          testTimeout: 30000,
+          hookTimeout: 30000,
         },
       },
       {

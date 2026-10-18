@@ -34,3 +34,5 @@ mimo
 .mimo/*
 mimo/*
 
+# Test coverage
+coverage/

@@ -7,6 +7,7 @@ import { initErrorTracking } from './services/errorTracking'
 import { logger } from './services/logging'
 import { initializeMonitoring } from './services/monitoring'
 import { repairCorruptedSaveData } from './services/saveLoad'
+import { initWebVitalsMonitoring } from './hooks/useWebVitals'
 import { env } from './config'
 
 // Validate/repair raw localStorage before any zustand store module (pulled
@@ -53,7 +54,8 @@ if (SENTRY_DSN) {
     environment: import.meta.env.VITE_APP_ENV ?? 'development',
     release: import.meta.env.VITE_APP_VERSION || undefined,
   })
-}
+// Initialize Web Vitals performance monitoring (#365)
+initWebVitalsMonitoring()
 
 logger.info('Monitoring and logging initialized')
 

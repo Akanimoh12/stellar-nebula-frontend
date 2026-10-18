@@ -32,3 +32,5 @@ export type {
 } from './useTransactionHistory'
 export { useWebSocketStatus } from './useWebSocketStatus'
 export type { UseWebSocketStatusReturn } from './useWebSocketStatus'
+export { useWebVitals, initWebVitalsMonitoring } from './useWebVitals'
+export type { WebVitalRating, WebVitalsState } from './useWebVitals'

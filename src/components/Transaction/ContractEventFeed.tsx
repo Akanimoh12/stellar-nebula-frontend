@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import {
   startContractEventListener,
   type ContractEventRecord,
@@ -13,6 +13,7 @@ export function ContractEventFeed({ defaultContractId = '' }: ContractEventFeedP
   const [contractId, setContractId] = useState(defaultContractId)
   const [events, setEvents] = useState<ContractEventRecord[]>([])
   const [error, setError] = useState<string | null>(null)
+  const contractIdInputId = useId()
 
   const debouncedContractId = useDebounce(contractId.trim(), 250)
   const canStream = useMemo(
@@ -63,9 +64,10 @@ export function ContractEventFeed({ defaultContractId = '' }: ContractEventFeedP
         </span>
       </div>
 
-      <label style={fieldStyle}>
+      <label htmlFor={contractIdInputId} style={fieldStyle}>
         <span style={fieldLabelStyle}>Contract ID</span>
         <input
+          id={contractIdInputId}
           value={contractId}
           onChange={(event) => setContractId(event.target.value.trim())}
           placeholder="C..."

@@ -32,10 +32,16 @@ async function waitForPreview(maxWaitMs = 180000) {
 try {
   await waitForPreview()
 
-  const lighthouse = spawn('npx', ['lhci', 'autorun', '--config', './.lighthouserc.cjs'], {
-    stdio: 'inherit',
-    shell: true,
-  })
+  // Lighthouse CI is fetched on demand (pinned) instead of being a devDependency:
+  // its puppeteer/proxy chain carries advisories, and only this job needs it.
+  const lighthouse = spawn(
+    'npx',
+    ['--yes', '@lhci/cli@0.15.1', 'autorun', '--config', './.lighthouserc.cjs'],
+    {
+      stdio: 'inherit',
+      shell: true,
+    }
+  )
 
   lighthouse.on('exit', (code) => {
     preview.kill('SIGTERM')

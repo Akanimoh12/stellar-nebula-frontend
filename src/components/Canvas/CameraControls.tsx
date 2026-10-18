@@ -95,16 +95,19 @@ export function CameraControls({
       'Nebula 3D view - use arrow keys or W A S D to orbit, Q E to zoom, R to reset, Space to toggle auto-rotate'
     )
     canvas.setAttribute('aria-roledescription', '3D canvas')
-    canvas.style.touchAction = 'none'
+    // The canvas is a DOM node owned by three.js, so styling it here is syncing an
+    // external system. `setProperty` rather than field assignment keeps the React
+    // Compiler from treating it as a mutation of the `useThree()` return value.
+    canvas.style.setProperty('touch-action', 'none')
     // Ensure visible focus indicator for keyboard users (WCAG 2.4.7)
-    canvas.style.outlineOffset = '2px'
+    canvas.style.setProperty('outline-offset', '2px')
     const handleFocus = () => {
-      canvas.style.outline = '3px solid #32d6a5'
-      canvas.style.boxShadow = '0 0 0 6px rgba(50, 214, 165, 0.2)'
+      canvas.style.setProperty('outline', '3px solid #32d6a5')
+      canvas.style.setProperty('box-shadow', '0 0 0 6px rgba(50, 214, 165, 0.2)')
     }
     const handleBlur = () => {
-      canvas.style.outline = 'none'
-      canvas.style.boxShadow = 'none'
+      canvas.style.setProperty('outline', 'none')
+      canvas.style.setProperty('box-shadow', 'none')
     }
     canvas.addEventListener('focus', handleFocus)
     canvas.addEventListener('blur', handleBlur)

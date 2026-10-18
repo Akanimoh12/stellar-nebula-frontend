@@ -32,7 +32,7 @@ export interface TransactionRecoveryOptions<TPayload> extends UseTransactionRetr
   releaseCooldown?: () => void
 }
 
-export interface TransactionRecovery<TPayload> {
+export interface TransactionRecovery {
   /** True when there is anything to recover from. */
   hasFailure: boolean
   /** The operation's own error message, when the failure carried one. */
@@ -48,7 +48,7 @@ export interface TransactionRecovery<TPayload> {
   rollback: () => void
 }
 
-export interface UseTransactionRecoveryOptions<TPayload> {
+export interface UseTransactionRecoveryOptions {
   /** Re-submits the transaction. Same contract as `useTransactionRetry`. */
   submit: (payload: unknown, attempt: number) => Promise<unknown>
   maxAttempts?: number
@@ -84,14 +84,14 @@ export function useTransactionRecovery<TPayload = unknown>({
   getTransactionId,
   getLabel,
   onOutcome,
-}: UseTransactionRecoveryOptions<TPayload>): TransactionRecovery<TPayload> {
+}: UseTransactionRecoveryOptions): TransactionRecovery {
   const retryState = useTransactionRetry<TPayload>({
     submit,
     maxAttempts,
     baseDelayMs,
     shouldRetry,
     getTransactionId,
-    getLabel
+    getLabel,
   })
 
   // `retryState` inside a `useCallback` is the value from the render that created
@@ -115,7 +115,7 @@ export function useTransactionRecovery<TPayload = unknown>({
         ...outcome,
         operationId: failedOperation?.id ?? null,
         transactionId: retryState.lastFailure?.transactionId ?? null,
-        errorType: errorTypeOf(outcome.error)
+        errorType: errorTypeOf(outcome.error),
       }
 
       if (onOutcome) {
@@ -129,7 +129,7 @@ export function useTransactionRecovery<TPayload = unknown>({
         trackEvent('transaction_retry_succeeded', {
           attempts: payload.attempts,
           operationId: payload.operationId,
-          transactionId: payload.transactionId
+          transactionId: payload.transactionId,
         })
       } else if (payload.status === 'retry_failed') {
         trackEvent('transaction_retry_failed', {
@@ -140,12 +140,12 @@ export function useTransactionRecovery<TPayload = unknown>({
           // keys, not values, and a Stellar failure message routinely embeds an
           // account address. The full message stays in the local outcome, where
           // the UI shows it to the user who caused it.
-          errorType: payload.errorType ?? 'unknown'
+          errorType: payload.errorType ?? 'unknown',
         })
       } else if (payload.status === 'rolled_back') {
         trackEvent('transaction_rolled_back', {
           operationId: payload.operationId,
-          transactionId: payload.transactionId
+          transactionId: payload.transactionId,
         })
       }
     },
@@ -161,7 +161,7 @@ export function useTransactionRecovery<TPayload = unknown>({
       status: succeeded ? 'retry_succeeded' : 'retry_failed',
       // Read after the attempt: the frame now carries the new error.
       attempts: lastFailureRef.current?.attempt ?? retryState.attempt,
-      error: succeeded ? null : (lastFailureRef.current?.error ?? null)
+      error: succeeded ? null : (lastFailureRef.current?.error ?? null),
     })
     return succeeded
   }, [report, retryState])
@@ -189,7 +189,11 @@ export function useTransactionRecovery<TPayload = unknown>({
     // Only a real rollback is reported; with nothing to undo, the store is
     // untouched and the metric would be counting an intent.
     if (operation) {
-      report({ status: 'rolled_back', attempts: retryState.attempt, error: operation.error ?? null })
+      report({
+        status: 'rolled_back',
+        attempts: retryState.attempt,
+        error: operation.error ?? null,
+      })
     }
   }, [failedOperation, report, retryState])
 
@@ -201,7 +205,7 @@ export function useTransactionRecovery<TPayload = unknown>({
       isRetrying: retryState.isRetrying,
       retry,
       dismiss,
-      rollback
+      rollback,
     }),
     [dismiss, failedOperation, retry, retryState, rollback]
   )

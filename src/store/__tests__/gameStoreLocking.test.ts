@@ -97,7 +97,7 @@ describe('startOperationWithLock success path and race conditions (Issue #314)',
     useGameStore.getState().resetGame()
   })
 
-  const op = (id: string, type: string, targetId: string): ActiveOperation => ({
+  const op = (id: string, type: ActiveOperation['type'], targetId: string): ActiveOperation => ({
     id,
     type,
     targetId,
@@ -134,9 +134,7 @@ describe('startOperationWithLock success path and race conditions (Issue #314)',
   })
 
   it('admits exactly one winner when the same type starts concurrently', () => {
-    const attempts = Array.from({ length: 50 }, (_, i) =>
-      op(`op-${i}`, 'scan', `nebula-${i}`)
-    )
+    const attempts = Array.from({ length: 50 }, (_, i) => op(`op-${i}`, 'scan', `nebula-${i}`))
 
     const results = attempts.map((o) => useGameStore.getState().startOperationWithLock(o))
     const winners = results.filter((r) => r.success)

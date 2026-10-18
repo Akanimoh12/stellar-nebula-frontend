@@ -8,10 +8,6 @@ interface WebGlFallbackProps {
 export function WebGlFallback({ alternatives, onRetry }: WebGlFallbackProps) {
   const isWebGlSupported = useWebGlSupport()
 
-  if (isWebGlSupported === undefined || isWebGlSupported === null) {
-    return null
-  }
-
   if (!isWebGlSupported) {
     return (
       <div

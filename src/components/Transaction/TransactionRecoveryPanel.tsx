@@ -1,9 +1,10 @@
+import type { ReactElement } from 'react'
 import { TransactionRetryButton } from './TransactionRetryButton'
 import type { TransactionRetryFrame } from '@/hooks/useTransactionRetry'
 import type { TransactionRecovery } from '@/hooks/useTransactionRecovery'
 
 export interface TransactionRecoveryPanelProps<TPayload> {
-  recovery: TransactionRecovery<TPayload>
+  recovery: TransactionRecovery
   /** Preserved failure, when one exists to re-submit. */
   failure?: TransactionRetryFrame<TPayload> | null
   maxAttempts?: number
@@ -33,8 +34,8 @@ export function TransactionRecoveryPanel<TPayload>({
   recovery,
   failure,
   maxAttempts = 3,
-  canRollback = true
-}: TransactionRecoveryPanelProps<TPayload>): JSX.Element | null {
+  canRollback = true,
+}: TransactionRecoveryPanelProps<TPayload>): ReactElement | null {
   if (!recovery.hasFailure) return null
 
   const showRetry = failure !== null && failure !== undefined

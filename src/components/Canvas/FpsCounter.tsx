@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useFrameRateMonitor } from '@/hooks/useFrameRateMonitor'
 import { useRenderStatsStore } from '@/store/renderStatsStore'
+import type { FpsBenchmarkSample } from '@/utils/performance/fpsBenchmark'
 import { trackEvent } from '@/services/analytics'
 
 /** Chrome-only, non-standard `performance.memory`; absent elsewhere. */
@@ -49,20 +50,46 @@ export function FpsCounter() {
   const geometries = useRenderStatsStore((s) => s.geometries)
   const textures = useRenderStatsStore((s) => s.textures)
 
+  // Stable, so the monitor's sampling loop is not restarted on every render.
+  // Render stats are read from the store at sample time rather than closed over.
+  const handleSample = useCallback((sample: FpsBenchmarkSample) => {
+    const { drawCalls, triangles, geometries, textures } = useRenderStatsStore.getState()
+    // Integration with the monitoring service (issue #322's suggested
+    // approach), the same event shape the Debug performance monitor sends.
+    trackEvent('performance_metric', {
+      metric: 'fps',
+      value: sample.fps,
+      drawCalls,
+      triangles,
+    })
+
+    // One history entry per completed sample (1s window), as the 120-entry
+    // (~2 minute) cap assumes. Appending from an effect instead re-rendered on
+    // every draw-call change and filled the buffer far faster than 1/s.
+    const mem = (performance as PerformanceWithMemory).memory
+    setHistory((prev) =>
+      [
+        ...prev,
+        {
+          fps: sample.fps,
+          averageFps: sample.averageFps,
+          drawCalls,
+          triangles,
+          geometries,
+          textures,
+          memoryUsedMB: mem ? toMB(mem.usedJSHeapSize) : null,
+          memoryLimitMB: mem ? toMB(mem.jsHeapSizeLimit) : null,
+          capturedAt: new Date().toISOString(),
+        },
+      ].slice(-120)
+    )
+  }, [])
+
   const { fps, averageFps } = useFrameRateMonitor({
     enabled: true,
     targetFps: 60,
     sampleWindowMs: 1000,
-    onSample: (sample) => {
-      // Integration with the monitoring service (issue #322's suggested
-      // approach), the same event shape the Debug performance monitor sends.
-      trackEvent('performance_metric', {
-        metric: 'fps',
-        value: sample.fps,
-        drawCalls,
-        triangles,
-      })
-    },
+    onSample: handleSample,
   })
 
   // performance.memory is Chrome-only and non-standard; sampled on the same
@@ -77,25 +104,6 @@ export function FpsCounter() {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
-
-  useEffect(() => {
-    setHistory((prev) =>
-      [
-        ...prev,
-        {
-          fps,
-          averageFps,
-          drawCalls,
-          triangles,
-          geometries,
-          textures,
-          memoryUsedMB: memUsed !== null ? toMB(memUsed) : null,
-          memoryLimitMB: memLimit !== null ? toMB(memLimit) : null,
-          capturedAt: new Date().toISOString(),
-        },
-      ].slice(-120) // ~2 minutes of samples at the 1s sampling cadence above.
-    )
-  }, [fps, averageFps, drawCalls, triangles, geometries, textures, memUsed, memLimit])
 
   const exportMetrics = useCallback(() => {
     trackEvent('performance_metrics_exported', { sampleCount: history.length })

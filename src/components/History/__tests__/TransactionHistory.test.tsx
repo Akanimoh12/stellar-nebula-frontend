@@ -16,11 +16,11 @@ import type { StellarTransaction } from '@/types'
  * concatenates.
  */
 const { mockGetTransactionHistory } = vi.hoisted(() => ({
-  mockGetTransactionHistory: vi.fn()
+  mockGetTransactionHistory: vi.fn(),
 }))
 
 vi.mock('@services/history/transactions', () => ({
-  getTransactionHistory: mockGetTransactionHistory
+  getTransactionHistory: mockGetTransactionHistory,
 }))
 
 function tx(index: number, overrides: Partial<StellarTransaction> = {}): StellarTransaction {
@@ -32,7 +32,7 @@ function tx(index: number, overrides: Partial<StellarTransaction> = {}): Stellar
     status: 'success',
     memo: `memo ${index}`,
     ledger: index,
-    ...overrides
+    ...overrides,
   } as StellarTransaction
 }
 
@@ -51,7 +51,12 @@ describe('TransactionHistory pagination', () => {
   })
 
   it('mounts only a window of rows, not the whole loaded page', async () => {
-    mockGetTransactionHistory.mockResolvedValue(page(Array.from({ length: 400 }, (_, i) => tx(i)), null))
+    mockGetTransactionHistory.mockResolvedValue(
+      page(
+        Array.from({ length: 400 }, (_, i) => tx(i)),
+        null
+      )
+    )
 
     render(<TransactionHistory accountId={ACCOUNT} pageSize={400} />)
 
@@ -77,7 +82,10 @@ describe('TransactionHistory pagination', () => {
 
     render(<TransactionHistory accountId={ACCOUNT} pageSize={60} />)
 
+    // Until the viewport is measured every row is mounted once; the baseline is
+    // the settled window after that, not whichever of the two renders lands first.
     await waitFor(() => expect(mountedRows()).toBeGreaterThan(0))
+    await waitFor(() => expect(mountedRows()).toBeLessThan(30))
     const afterFirst = mountedRows()
 
     await user.click(screen.getByRole('button', { name: /load more/i }))
@@ -152,13 +160,18 @@ describe('TransactionHistory pagination', () => {
   })
 
   it('pads the unrendered rows so the scroll height still matches the history', async () => {
-    mockGetTransactionHistory.mockResolvedValue(page(Array.from({ length: 200 }, (_, i) => tx(i)), null))
+    mockGetTransactionHistory.mockResolvedValue(
+      page(
+        Array.from({ length: 200 }, (_, i) => tx(i)),
+        null
+      )
+    )
 
     const { container } = render(<TransactionHistory accountId={ACCOUNT} pageSize={200} />)
     await waitFor(() => expect(mountedRows()).toBeGreaterThan(0))
 
     // Two spacers stand in for the rows that are not mounted.
-    const spacers = container.querySelectorAll('div[aria-hidden="true"]')
+    const spacers = container.querySelectorAll<HTMLDivElement>('div[aria-hidden="true"]')
     expect(spacers.length).toBeGreaterThan(0)
     const spacerHeights = Array.from(spacers).map((node) => parseInt(node.style.height, 10))
     expect(spacerHeights.some((height) => height > 0)).toBe(true)

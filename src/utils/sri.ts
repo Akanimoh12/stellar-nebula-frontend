@@ -95,7 +95,7 @@ export function loadScriptWithSRI(
 
     // Fallback: try without integrity (degraded but functional) or local fallback
     if (resource.fallback) {
-      console.info(`[SRI] Attempting fallback for ${resource.url} -> ${resource.fallback}`)
+      console.warn(`[SRI] Attempting fallback for ${resource.url} -> ${resource.fallback}`)
       const fallbackScript = document.createElement('script')
       fallbackScript.src = resource.fallback
       fallbackScript.async = true

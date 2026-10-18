@@ -2,6 +2,9 @@ import type { ErrorInfo, ReactNode } from 'react'
 import { Component } from 'react'
 import { trackEvent } from '../../services/analytics'
 import { captureError } from '../../services/errorTracking'
+import { createScopedLogger } from '../../services/logging'
+
+const log = createScopedLogger('ErrorBoundary')
 
 const MAX_AUTO_RETRIES = 2
 const TRANSIENT_ERROR_PATTERN = /(network|fetch|timeout|loading|resource|socket|abort)/i
@@ -45,14 +48,14 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       const attempt = this.state.recoveryAttempts + 1
       const delay = attempt * 750
 
-      console.info(`ErrorBoundary auto-retry scheduled (attempt ${attempt}/${MAX_AUTO_RETRIES})`, {
+      log.info(`auto-retry scheduled (attempt ${attempt}/${MAX_AUTO_RETRIES})`, {
         delay,
         errorName: error.name,
       })
 
       this.retryTimeoutId = window.setTimeout(() => {
         this.setState({ hasError: false, error: null, recoveryAttempts: attempt })
-        console.info('ErrorBoundary auto-retry triggered', { attempt })
+        log.info('auto-retry triggered', { attempt })
       }, delay)
     }
 
@@ -67,7 +70,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
   handleReset = (): void => {
     const nextAttempt = this.state.recoveryAttempts + 1
-    console.info('ErrorBoundary manual retry triggered', { attempt: nextAttempt })
+    log.info('manual retry triggered', { attempt: nextAttempt })
     this.setState({ hasError: false, error: null, recoveryAttempts: nextAttempt })
   }
 

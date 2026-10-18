@@ -34,12 +34,35 @@ function inlineCriticalCss(): Plugin {
       ]
     },
   }
+/**
+ * Injects preload hints for critical resources to optimize LCP and CLS (#379).
+ */
+function generatePreloadHints(): Plugin {
+  return {
+    name: 'generate-preload-hints',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'link',
+          attrs: {
+            rel: 'preload',
+            as: 'font',
+            type: 'font/woff2',
+            href: 'https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2',
+            crossorigin: 'anonymous',
+          },
+          injectTo: 'head-prepend',
+        },
+      ]
+    },
+  }
 }
 
 export default defineConfig({
   plugins: [
     react(),
     inlineCriticalCss(),
+    generatePreloadHints(),
     visualizer({ filename: 'stats.html', gzipSize: true, brotliSize: true, template: 'treemap' }),
     visualizer({
       filename: 'stats.json',
@@ -190,6 +213,9 @@ export default defineConfig({
     },
   },
   build: {
+    modulePreload: {
+      polyfill: true,
+    },
     sourcemap: true,
     rollupOptions: {
       output: {

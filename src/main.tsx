@@ -8,6 +8,10 @@ import { logger } from './services/logging'
 import { initializeMonitoring } from './services/monitoring'
 import { repairCorruptedSaveData } from './services/saveLoad'
 import { env } from './config'
+import { preloadCriticalAssets } from './utils/preload'
+
+// Preload critical fonts, icons, and hero assets early to improve LCP and CLS (#379)
+preloadCriticalAssets()
 
 // Validate/repair raw localStorage before any zustand store module (pulled
 // in transitively by App) hydrates from it, so a corrupted save can't crash

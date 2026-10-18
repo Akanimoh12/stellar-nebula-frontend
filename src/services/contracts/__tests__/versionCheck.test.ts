@@ -31,7 +31,7 @@ describe('queryContractVersion', () => {
 
   it('reads a version stored as bytes', async () => {
     getContractData.mockResolvedValue(
-      contractDataEntry(xdr.ScVal.scvBytes(new TextEncoder().encode('1.4.2')))
+      contractDataEntry(xdr.ScVal.scvBytes(new TextEncoder().encode('1.4.2') as unknown as Buffer))
     )
     await expect(queryContractVersion('CCONTRACT')).resolves.toBe('1.4.2')
   })

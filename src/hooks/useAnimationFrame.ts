@@ -57,15 +57,27 @@ export function useAnimationFrame(
   const isPaused = !enabled || manuallyPaused || (pauseWhenHidden && !isVisible)
 
   const callbackRef = useRef(callback)
-  callbackRef.current = callback
+  useEffect(() => {
+    callbackRef.current = callback
+  }, [callback])
 
   const rafIdRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number | null>(null)
   const frameCountRef = useRef<number>(0)
   const minFrameInterval = fpsLimit && fpsLimit > 0 ? 1000 / fpsLimit : 0
 
-  const loop = useCallback(
-    (timestamp: number) => {
+  useEffect(() => {
+    if (isPaused) {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
+      // Reset lastTimeRef so resuming does not cause a huge delta jump
+      lastTimeRef.current = null
+      return
+    }
+
+    const step = (timestamp: number) => {
       if (lastTimeRef.current === null) {
         lastTimeRef.current = timestamp
       }
@@ -83,23 +95,10 @@ export function useAnimationFrame(
         })
       }
 
-      rafIdRef.current = requestAnimationFrame(loop)
-    },
-    [minFrameInterval]
-  )
-
-  useEffect(() => {
-    if (isPaused) {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current)
-        rafIdRef.current = null
-      }
-      // Reset lastTimeRef so resuming does not cause a huge delta jump
-      lastTimeRef.current = null
-      return
+      rafIdRef.current = requestAnimationFrame(step)
     }
 
-    rafIdRef.current = requestAnimationFrame(loop)
+    rafIdRef.current = requestAnimationFrame(step)
 
     return () => {
       if (rafIdRef.current !== null) {
@@ -108,7 +107,7 @@ export function useAnimationFrame(
       }
       lastTimeRef.current = null
     }
-  }, [isPaused, loop])
+  }, [isPaused, minFrameInterval])
 
   const pause = useCallback(() => setManuallyPaused(true), [])
   const resume = useCallback(() => setManuallyPaused(false), [])

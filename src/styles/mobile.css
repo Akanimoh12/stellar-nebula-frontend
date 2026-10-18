@@ -1,0 +1,79 @@
+/* ── Mobile & Touch Target Accessibility Styles (WCAG 2.1 SC 2.5.5 AAA) ──────
+   Ensures all interactive elements have at least a 44x44px tap area and
+   adequate spacing (>= 8px) between adjacent targets on mobile/touch devices. */
+
+:root {
+  --touch-target-min: 44px;
+  --touch-target-lg: 48px;
+  --touch-target-gap: 8px;
+}
+
+.touch-target,
+button.touch-target,
+[role='button'].touch-target,
+[role='combobox'],
+[role='switch'],
+.nebula-scan-button,
+.motion-toggle-btn,
+.custom-select-trigger,
+.custom-select-option {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  touch-action: manipulation;
+}
+
+.touch-group,
+.nebula-keyboard-controls,
+.settings-data-actions {
+  gap: var(--touch-target-gap);
+}
+
+/* Enforce >=44x44px touch targets across interactive controls on coarse pointers and mobile viewports */
+@media (pointer: coarse), (max-width: 768px) {
+  button,
+  [role='button'],
+  [role='combobox'],
+  [role='switch'],
+  [role='option'],
+  input[type='button'],
+  input[type='submit'],
+  input[type='reset'],
+  select,
+  a.nav-link,
+  a.mobile-nav-link,
+  .header-hamburger,
+  .mobile-menu-trigger,
+  .wallet-connect-btn,
+  .header-wallet-disconnect,
+  .settings-button,
+  .settings-toggle {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  .main-nav,
+  .mobile-menu,
+  .header-tools,
+  .nebula-keyboard-controls,
+  .settings-data-actions {
+    gap: 8px;
+  }
+}
+
+/* ── Reduced Motion & Manual Pause Support (WCAG 2.1 SC 2.2.2) ──────────── */
+html[data-reduced-motion='true'] *,
+html[data-reduced-motion='true'] *::before,
+html[data-reduced-motion='true'] *::after,
+html[data-animations-paused='true'] *,
+html[data-animations-paused='true'] *::before,
+html[data-animations-paused='true'] *::after,
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-play-state: paused !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

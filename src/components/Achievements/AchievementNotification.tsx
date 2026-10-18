@@ -28,7 +28,7 @@ const NotificationItem: React.FC<NotificationProps> = ({ achievement, onDismiss 
     >
       <div className="text-3xl">{achievement.icon}</div>
       <div className="flex-1">
-        <h4 className="text-white font-bold text-sm">Achievement Unlocked!</h4>
+        <h2 className="text-white font-bold text-sm">Achievement Unlocked!</h2>
         <p className="text-cosmic-cyan text-sm">{achievement.title}</p>
       </div>
       <button

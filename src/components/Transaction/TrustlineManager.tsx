@@ -186,7 +186,7 @@ export function TrustlineManager() {
       <div style={headerStyle}>
         <div>
           <p style={eyebrowStyle}>Trustline management</p>
-          <h3 style={titleStyle}>Inspect, confirm, and submit trustlines</h3>
+          <h2 style={titleStyle}>Inspect, confirm, and submit trustlines</h2>
           <p style={copyStyle}>
             Check whether the wallet already trusts the resource asset, estimate the reserve impact,
             and prepare a signed change-trust transaction.

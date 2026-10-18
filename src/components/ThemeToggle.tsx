@@ -9,7 +9,8 @@ export const ThemeToggle: React.FC = () => {
       type="button"
       aria-pressed={theme === 'dark'}
       onClick={toggleTheme}
-      className="p-2 rounded-full bg-space-800 dark:bg-space-900 text-space-100 border border-space-700 hover:bg-space-700 transition-colors duration-200"
+      className="touch-target inline-flex items-center justify-center p-2.5 rounded-full bg-space-800 dark:bg-space-900 text-space-100 border border-space-700 hover:bg-space-700 transition-colors duration-200 min-h-touch min-w-touch"
+      style={{ minHeight: '44px', minWidth: '44px' }}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       {theme === 'dark' ? (

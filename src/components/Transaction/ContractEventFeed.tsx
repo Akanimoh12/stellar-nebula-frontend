@@ -52,7 +52,7 @@ export function ContractEventFeed({ defaultContractId = '' }: ContractEventFeedP
       <div style={headerStyle}>
         <div>
           <p style={eyebrowStyle}>Contract events</p>
-          <h3 style={titleStyle}>Live event listener</h3>
+          <h2 style={titleStyle}>Live event listener</h2>
           <p style={copyStyle}>
             Horizon keeps the stream live while RPC fetches the contract events for the selected
             contract ID.

@@ -13,6 +13,8 @@ import { useGraphicsStore } from '@/store'
 import { useAdaptivePerformanceMode } from '@/hooks/useAdaptivePerformanceMode'
 import { useScanCooldown } from '@/hooks/useScanCooldown'
 import { usePageVisibility } from '@/hooks/useAnimationFrame'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { MotionToggle } from '../MotionToggle'
 import { trackEvent } from '@/services/analytics'
 import { haptics } from '@/utils/haptics'
 import { rollScanReward, rollResourceAmount } from '@/utils/rarity'
@@ -32,8 +34,10 @@ function CanvasResourceCleanup() {
   return null
 }
 
-interface NebulaCanvasProps {
+export interface NebulaCanvasProps {
   showFps?: boolean
+  showMotionControls?: boolean
+  reducedMotion?: boolean
   onScanComplete?: (resourceType: ResourceType, amount: number, pointId: string) => void
 }
 
@@ -78,13 +82,22 @@ function createInitialRng() {
   return createRNG(Date.now())
 }
 
-function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
+function NebulaCanvas({
+  showFps = false,
+  showMotionControls = true,
+  reducedMotion: reducedMotionProp,
+  onScanComplete,
+}: NebulaCanvasProps) {
   const bloomEnabled = useGraphicsStore((state) => state.bloomEnabled)
   const bloomIntensity = useGraphicsStore((state) => state.bloomIntensity)
   const performanceMode = useGraphicsStore((state) => state.performanceMode)
   const starfieldDensity = useGraphicsStore((state) => state.starfieldDensity)
   useAdaptivePerformanceMode()
   const isPageVisible = usePageVisibility()
+  const { prefersReducedMotion, isPaused, togglePause } = useReducedMotion()
+
+  const isMotionReduced = reducedMotionProp ?? (prefersReducedMotion || isPaused)
+  const effectivePerformanceMode = performanceMode || isMotionReduced
 
   const [focusedPointId, setFocusedPointId] = useState<string | null>(null)
   const [isWrapperFocused, setIsWrapperFocused] = useState(false)
@@ -242,8 +255,13 @@ function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
         setFocusedPointId(lastId)
         wrapperRef.current?.querySelector<HTMLButtonElement>(`[data-scan-id="${lastId}"]`)?.focus()
       }
+
+      if (event.key.toLowerCase() === 'p' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault()
+        togglePause()
+      }
     },
-    [focusedPointId, handleScan]
+    [focusedPointId, handleScan, togglePause]
   )
 
   // Clear live message after a delay for screen readers
@@ -262,9 +280,11 @@ function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
       ref={wrapperRef}
       tabIndex={0}
       role="application"
-      aria-label="Nebula exploration canvas. Use Tab to navigate scan points, Enter or Space to scan, arrow keys to rotate or navigate points, Q and E to zoom, R to reset view, Space to toggle auto-rotate."
+      aria-label="Nebula exploration canvas. Use Tab to navigate scan points, Enter or Space to scan, arrow keys to rotate or navigate points, Q and E to zoom, R to reset view, P to pause or resume animations, Space to toggle auto-rotate."
       aria-describedby="nebula-canvas-instructions"
       aria-roledescription="3D nebula canvas"
+      data-reduced-motion={isMotionReduced ? 'true' : 'false'}
+      data-animations-paused={isMotionReduced ? 'true' : 'false'}
       className={`nebula-canvas-wrapper ${isWrapperFocused ? 'is-focused' : ''}`}
       onFocus={() => setIsWrapperFocused(true)}
       onBlur={(e) => {
@@ -285,14 +305,29 @@ function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
     >
       <p id="nebula-canvas-instructions" className="sr-only">
         Interactive 3D nebula with 4 scannable anomaly points. Press Tab to move between scan
-        points. Press Enter or Space to scan the focused anomaly. Use arrow keys, W A S D to orbit
-        the camera, Q to zoom in and E to zoom out, R to reset view, and number keys 1 2 3 for
-        preset zoom levels. Each scan has a cooldown period.
+        points. Press Enter or Space to scan the focused anomaly. Press P or use the Pause Motion
+        button to pause or resume animations. Use arrow keys, W A S D to orbit the camera, Q to zoom
+        in and E to zoom out, R to reset view, and number keys 1 2 3 for preset zoom levels. Each
+        scan has a cooldown period.
       </p>
 
       {showFps && <FpsCounter />}
+      {showMotionControls && (
+        <div
+          className="nebula-motion-controls"
+          style={{
+            position: 'absolute',
+            top: '0.75rem',
+            right: '0.75rem',
+            zIndex: 10,
+            pointerEvents: 'auto',
+          }}
+        >
+          <MotionToggle />
+        </div>
+      )}
       <Canvas
-        frameloop={isPageVisible ? 'always' : 'never'}
+        frameloop={!isPageVisible || isMotionReduced ? 'never' : 'always'}
         camera={{ position: [0, 0, 5], fov: 60, near: 0.1, far: 1000 }}
         gl={{ antialias: !deviceHints.isMobile, powerPreference: 'high-performance' }}
         dpr={[1, deviceHints.isMobile ? 1.5 : 2]}
@@ -302,7 +337,7 @@ function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
         <Suspense fallback={null}>
           <NebulaScene
             starfieldDensity={starfieldDensity}
-            performanceMode={performanceMode}
+            performanceMode={effectivePerformanceMode}
             onScanComplete={onScanComplete}
             onScan={handleScan}
             scanningPoints={scanningPoints}
@@ -311,12 +346,19 @@ function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
             focusedPointId={focusedPointId}
           />
           <BloomEffect
-            enabled={bloomEnabled}
+            enabled={bloomEnabled && !isMotionReduced}
             intensity={bloomIntensity}
-            performanceMode={performanceMode}
+            performanceMode={effectivePerformanceMode}
           />
-          <DepthOfFieldEffect enabled={!performanceMode} performanceMode={performanceMode} />
-          <CameraControls isMobile={deviceHints.isMobile} performanceMode={performanceMode} />
+          <DepthOfFieldEffect
+            enabled={!effectivePerformanceMode}
+            performanceMode={effectivePerformanceMode}
+          />
+          <CameraControls
+            isMobile={deviceHints.isMobile}
+            performanceMode={effectivePerformanceMode}
+            reducedMotion={isMotionReduced}
+          />
           <CanvasResourceCleanup />
           {showFps && <RenderStatsCollector />}
           <Preload all />
@@ -388,7 +430,7 @@ function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
                   handleScan(point.id, point.resourceType, point.resourceAmount)
                 }
               }}
-              className={`nebula-scan-button ${isFocused ? 'is-focused' : ''} ${isDisabled ? 'is-disabled' : ''}`}
+              className={`nebula-scan-button touch-target ${isFocused ? 'is-focused' : ''} ${isDisabled ? 'is-disabled' : ''}`}
               style={{
                 padding: '0.5rem 0.75rem',
                 borderRadius: '999px',
@@ -408,10 +450,10 @@ function NebulaCanvas({ showFps = false, onScanComplete }: NebulaCanvasProps) {
                 boxShadow: isFocused
                   ? '0 0 0 3px rgba(50, 214, 165, 0.4), 0 4px 12px rgba(0,0,0,0.3)'
                   : '0 2px 8px rgba(0,0,0,0.2)',
-                transform: isFocused ? 'scale(1.05)' : 'scale(1)',
-                transition: 'all 160ms ease',
-                minHeight: '2.5rem',
-                minWidth: '2.5rem',
+                transform: isFocused && !isMotionReduced ? 'scale(1.05)' : 'scale(1)',
+                transition: isMotionReduced ? 'none' : 'all 160ms ease',
+                minHeight: '44px',
+                minWidth: '44px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.35rem',

@@ -39,6 +39,27 @@ export default {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
+      minHeight: {
+        touch: '44px',
+        'touch-sm': '44px',
+        'touch-lg': '48px',
+      },
+      minWidth: {
+        touch: '44px',
+        'touch-sm': '44px',
+        'touch-lg': '48px',
+      },
+      height: {
+        touch: '44px',
+        'touch-lg': '48px',
+      },
+      width: {
+        touch: '44px',
+        'touch-lg': '48px',
+      },
+      spacing: {
+        'touch-gap': '8px',
+      },
     },
   },
   plugins: [],

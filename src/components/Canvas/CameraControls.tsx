@@ -43,12 +43,14 @@ function rotateCameraOrbit(
 interface CameraControlsProps {
   isMobile?: boolean
   performanceMode?: boolean
+  reducedMotion?: boolean
   onTapToScan?: (x: number, y: number) => void
 }
 
 export function CameraControls({
   isMobile = false,
   performanceMode = false,
+  reducedMotion = false,
   onTapToScan,
 }: CameraControlsProps) {
   const controlsRef = useRef<OrbitControlsImpl>(null)
@@ -57,8 +59,9 @@ export function CameraControls({
   const canvasRef = useRef<HTMLElement>(gl.domElement)
 
   const { jumpToLevel } = useNebulaZoom(controlsRef)
-  const autoRotateEnabled = useGraphicsStore((state) => state.autoRotateEnabled)
+  const storeAutoRotateEnabled = useGraphicsStore((state) => state.autoRotateEnabled)
   const setAutoRotateEnabled = useGraphicsStore((state) => state.setAutoRotateEnabled)
+  const autoRotateEnabled = storeAutoRotateEnabled && !reducedMotion
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {

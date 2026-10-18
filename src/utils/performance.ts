@@ -22,10 +22,7 @@ export function isTabVisible(): boolean {
  * @param onHidden Callback when document becomes hidden
  * @returns Cleanup function to remove the listener
  */
-export function onVisibilityChange(
-  onVisible?: () => void,
-  onHidden?: () => void
-): () => void {
+export function onVisibilityChange(onVisible?: () => void, onHidden?: () => void): () => void {
   if (typeof document === 'undefined') {
     return () => {}
   }
@@ -57,7 +54,15 @@ export async function getBatteryStatus(): Promise<{
     return null
   }
   try {
-    const battery = await (navigator as any).getBattery()
+    const nav = navigator as Navigator & {
+      getBattery: () => Promise<{
+        charging?: boolean
+        level?: number
+        chargingTime?: number
+        dischargingTime?: number
+      }>
+    }
+    const battery = await nav.getBattery()
     return {
       charging: battery.charging,
       level: battery.level,

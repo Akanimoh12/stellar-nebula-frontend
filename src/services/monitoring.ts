@@ -10,7 +10,7 @@
  * across different environments.
  */
 
-import * as Sentry from '@sentry/react'
+import { getSentry } from './sentryClient'
 import { createScopedLogger } from './logging'
 
 const log = createScopedLogger('Monitoring')
@@ -32,16 +32,17 @@ let monitoringInitialized = false
  * Initialize monitoring services.
  * Should be called very early in the application lifecycle, before other code runs.
  */
-export function initializeMonitoring(config: MonitoringConfig): void {
+export async function initializeMonitoring(config: MonitoringConfig): Promise<void> {
   if (monitoringInitialized) {
     log.warn('Monitoring already initialized, skipping duplicate initialization')
     return
   }
 
   try {
-    // Initialize Sentry first if DSN is provided
+    // Initialize Sentry first if DSN is provided. Awaited so LogRocket (below)
+    // can safely assume the Sentry chunk has loaded before it tries to use it.
     if (config.sentryDsn) {
-      initializeSentry(config)
+      await initializeSentry(config)
     } else {
       log.info('Sentry DSN not provided, error tracking disabled')
     }
@@ -70,9 +71,14 @@ export function initializeMonitoring(config: MonitoringConfig): void {
 
 /**
  * Initialize Sentry for error tracking, performance monitoring, and replays.
+ *
+ * `@sentry/react` is loaded via a dynamic import (see `./sentryClient`) so it
+ * is fetched and parsed in its own chunk, off the critical rendering path,
+ * instead of blocking first paint as a synchronous top-level import would.
  */
-function initializeSentry(config: MonitoringConfig): void {
+async function initializeSentry(config: MonitoringConfig): Promise<void> {
   try {
+    const Sentry = await getSentry()
     Sentry.init({
       dsn: config.sentryDsn!,
       environment: config.sentryEnvironment,
@@ -160,15 +166,17 @@ function initializeLogRocket(appId: string): void {
     })
 
     // Connect Sentry with LogRocket for unified error tracking
-    if (monitoringInitialized && Sentry) {
+    if (monitoringInitialized) {
       LogRocket.getSessionURL((sessionURL: string) => {
-        Sentry.captureMessage('LogRocket Session', {
-          level: 'info',
-          contexts: {
-            replay: {
-              url: sessionURL,
+        getSentry().then((Sentry) => {
+          Sentry.captureMessage('LogRocket Session', {
+            level: 'info',
+            contexts: {
+              replay: {
+                url: sessionURL,
+              },
             },
-          },
+          })
         })
       })
     }
@@ -188,11 +196,13 @@ function initializeLogRocket(appId: string): void {
 export function setMonitoringUser(userId: string, email?: string, username?: string): void {
   try {
     // Set Sentry user
-    Sentry.setUser({
-      id: userId,
-      email,
-      username,
-    })
+    getSentry().then((Sentry) =>
+      Sentry.setUser({
+        id: userId,
+        email,
+        username,
+      })
+    )
 
     // Set LogRocket user if available
     const LogRocket = (window as any).LogRocket
@@ -218,7 +228,7 @@ export function setMonitoringUser(userId: string, email?: string, username?: str
  */
 export function clearMonitoringUser(): void {
   try {
-    Sentry.setUser(null)
+    getSentry().then((Sentry) => Sentry.setUser(null))
 
     const LogRocket = (window as any).LogRocket
     if (LogRocket) {
@@ -240,12 +250,14 @@ export function clearMonitoringUser(): void {
  */
 export function captureMonitoringEvent(eventName: string, data?: Record<string, any>): void {
   try {
-    Sentry.captureMessage(eventName, {
-      level: 'info',
-      contexts: {
-        custom: data,
-      },
-    })
+    getSentry().then((Sentry) =>
+      Sentry.captureMessage(eventName, {
+        level: 'info',
+        contexts: {
+          custom: data,
+        },
+      })
+    )
 
     const LogRocket = (window as any).LogRocket
     if (LogRocket) {
@@ -265,12 +277,14 @@ export function addMonitoringBreadcrumb(
   data?: Record<string, any>
 ): void {
   try {
-    Sentry.addBreadcrumb({
-      message,
-      category,
-      data,
-      level: 'info',
-    })
+    getSentry().then((Sentry) =>
+      Sentry.addBreadcrumb({
+        message,
+        category,
+        data,
+        level: 'info',
+      })
+    )
 
     const LogRocket = (window as any).LogRocket
     if (LogRocket) {
@@ -308,48 +322,50 @@ export function trackWebVital(metric: WebVitalMetric): void {
     })
 
     // Sentry measurements & tags for performance dashboard
-    if (typeof (Sentry as any).setMeasurement === 'function') {
-      ;(Sentry as any).setMeasurement(
-        metric.name,
-        roundedValue,
-        metric.name === 'CLS' ? '' : 'millisecond'
-      )
-    }
+    getSentry().then((Sentry) => {
+      if (typeof (Sentry as any).setMeasurement === 'function') {
+        ;(Sentry as any).setMeasurement(
+          metric.name,
+          roundedValue,
+          metric.name === 'CLS' ? '' : 'millisecond'
+        )
+      }
 
-    Sentry.setTag(`vital.${metric.name.toLowerCase()}`, metric.rating)
-    Sentry.setExtra(`vital.${metric.name.toLowerCase()}_value`, roundedValue)
+      Sentry.setTag(`vital.${metric.name.toLowerCase()}`, metric.rating)
+      Sentry.setExtra(`vital.${metric.name.toLowerCase()}_value`, roundedValue)
 
-    // Capture breadcrumb for diagnostics
-    Sentry.addBreadcrumb({
-      category: 'web-vital',
-      message: `${metric.name}: ${roundedValue} (${metric.rating})`,
-      level: metric.rating === 'poor' ? 'warning' : 'info',
-      data: {
-        metric: metric.name,
-        value: roundedValue,
-        rating: metric.rating,
-        id: metric.id,
-      },
-    })
-
-    // Alert for regressions if metric is poor
-    if (metric.rating === 'poor') {
-      Sentry.captureMessage(`[Performance Alert] Poor ${metric.name}: ${roundedValue}`, {
-        level: 'warning',
-        tags: {
-          regression_type: 'web-vital',
+      // Capture breadcrumb for diagnostics
+      Sentry.addBreadcrumb({
+        category: 'web-vital',
+        message: `${metric.name}: ${roundedValue} (${metric.rating})`,
+        level: metric.rating === 'poor' ? 'warning' : 'info',
+        data: {
           metric: metric.name,
-        },
-        contexts: {
-          web_vital: {
-            name: metric.name,
-            value: roundedValue,
-            rating: metric.rating,
-            id: metric.id,
-          },
+          value: roundedValue,
+          rating: metric.rating,
+          id: metric.id,
         },
       })
-    }
+
+      // Alert for regressions if metric is poor
+      if (metric.rating === 'poor') {
+        Sentry.captureMessage(`[Performance Alert] Poor ${metric.name}: ${roundedValue}`, {
+          level: 'warning',
+          tags: {
+            regression_type: 'web-vital',
+            metric: metric.name,
+          },
+          contexts: {
+            web_vital: {
+              name: metric.name,
+              value: roundedValue,
+              rating: metric.rating,
+              id: metric.id,
+            },
+          },
+        })
+      }
+    })
 
     // LogRocket custom event
     const LogRocket = (window as any).LogRocket
@@ -368,4 +384,4 @@ export function trackWebVital(metric: WebVitalMetric): void {
   }
 }
 
-export { Sentry }
+export { getSentry }

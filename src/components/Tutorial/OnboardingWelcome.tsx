@@ -75,9 +75,9 @@ export function OnboardingWelcome() {
           🌌
         </div>
 
-        <h1 id="onboarding-title" className="onboarding-title">
+        <h2 id="onboarding-title" className="onboarding-title">
           Welcome to Stellar Nebula
-        </h1>
+        </h2>
 
         <p id="onboarding-desc" className="onboarding-desc">
           Drift through procedurally generated nebulae, harvest on-chain resources, and upgrade your

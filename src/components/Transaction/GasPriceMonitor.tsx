@@ -47,7 +47,7 @@ export function GasPriceMonitor({ config }: GasPriceMonitorProps) {
       <div style={headerStyle}>
         <div>
           <p style={eyebrowStyle}>Gas monitor</p>
-          <h3 style={titleStyle}>Track network fee pressure</h3>
+          <h2 style={titleStyle}>Track network fee pressure</h2>
           <p style={copyStyle}>
             Polls Soroban fee stats every 30 seconds and highlights when base fees begin to spike.
           </p>

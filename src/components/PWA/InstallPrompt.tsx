@@ -78,7 +78,7 @@ export function InstallPrompt() {
           <span style={iconStyle}>📱</span>
         </div>
 
-        <h3 style={titleStyle}>Install Nebula Nomad</h3>
+        <h2 style={titleStyle}>Install Nebula Nomad</h2>
         <p style={descriptionStyle}>
           Install our app for a better experience with offline support and quick access!
         </p>

@@ -57,6 +57,7 @@ export default defineConfig([
       ],
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'jsx-a11y/heading-has-content': 'error',
     },
   },
   ...storybook.configs['flat/recommended'],

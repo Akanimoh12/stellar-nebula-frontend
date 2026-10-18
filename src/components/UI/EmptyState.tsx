@@ -73,7 +73,7 @@ export function EmptyState({
           {icon}
         </div>
       )}
-      <h3 className="text-lg font-bold text-white">{title}</h3>
+      <h2 className="text-lg font-bold text-white">{title}</h2>
       {description != null && <p className="max-w-sm text-sm text-space-100">{description}</p>}
       {(action || secondaryAction) && (
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">

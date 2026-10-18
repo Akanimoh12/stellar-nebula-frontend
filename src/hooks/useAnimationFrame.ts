@@ -101,7 +101,7 @@ export function useAnimationFrame(
       return
     }
 
-    rafIdRef.current = requestAnimationFrame(loop)
+    rafIdRef.current = requestAnimationFrame(step)
 
     return () => {
       if (rafIdRef.current !== null) {
@@ -110,7 +110,7 @@ export function useAnimationFrame(
       }
       lastTimeRef.current = null
     }
-  }, [isPaused, loop])
+  }, [isPaused, minFrameInterval])
 
   const pause = useCallback(() => setManuallyPaused(true), [])
   const resume = useCallback(() => setManuallyPaused(false), [])

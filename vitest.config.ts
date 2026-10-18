@@ -44,6 +44,8 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'unit',
+          exclude: ['src/__tests__/integration/**', 'e2e/**'],
           environment: 'happy-dom',
           globals: true,
           setupFiles: ['./src/test/setup.ts'],
@@ -51,6 +53,25 @@ export default defineConfig({
           // `src/config/env.ts` validates these at import time, so without them any
           // suite that imports the API client fails to load. Non-secret test values;
           // tests that exercise validation stub their own.
+          env: {
+            VITE_STELLAR_RPC_URL: 'https://soroban-testnet.stellar.org',
+            VITE_STELLAR_HORIZON_URL: 'https://horizon-testnet.stellar.org',
+            VITE_STELLAR_PASSPHRASE: 'Test SDF Network ; September 2015',
+            VITE_NEBULA_CONTRACT_ID: 'CTEST_NEBULA',
+            VITE_TOKEN_CONTRACT_ID: 'CTEST_TOKEN',
+            VITE_API_BASE_URL: 'https://api.test',
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'integration',
+          include: ['src/__tests__/integration/**/*.{test,spec}.{ts,tsx}'],
+          environment: 'happy-dom',
+          globals: true,
+          setupFiles: ['./src/test/setup.ts'],
+          testTimeout: 20000,
           env: {
             VITE_STELLAR_RPC_URL: 'https://soroban-testnet.stellar.org',
             VITE_STELLAR_HORIZON_URL: 'https://horizon-testnet.stellar.org',

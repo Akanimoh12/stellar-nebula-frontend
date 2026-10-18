@@ -45,11 +45,12 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: ['src/**/*.{test,spec}.{ts,tsx}'],
           environment: 'happy-dom',
           globals: true,
           setupFiles: ['./src/test/setup.ts'],
           testTimeout: 15000,
+          include: ['src/**/*.{test,spec}.{ts,tsx}', 'test/**/*.{test,spec}.{ts,tsx}'],
+          exclude: [...configDefaults.exclude, 'e2e/**', 'src/**/*.stories.{ts,tsx}'],
           // `src/config/env.ts` validates these at import time, so without them any
           // suite that imports the API client fails to load. Non-secret test values;
           // tests that exercise validation stub their own.

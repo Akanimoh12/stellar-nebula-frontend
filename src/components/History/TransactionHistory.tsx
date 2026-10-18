@@ -88,7 +88,7 @@ export function TransactionHistory({
   // rather than read on scroll so the window recomputes; a ref would update the
   // DOM without re-rendering it, which is the bug this replaces.
   const [scrollTop, setScrollTop] = useState(0)
-  const [viewportHeight, setViewportHeight] = useState(0)
+  const [viewportHeight, setViewportHeight] = useState(640)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const canLoadMore = useMemo(() => Boolean(nextHref), [nextHref])

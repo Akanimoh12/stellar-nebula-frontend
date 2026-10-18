@@ -59,6 +59,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: npm run unused-exports:check
 
+      - name: Check for duplicate dependencies (React/Three.js)
+        if: ${{ !cancelled() }}
+        run: npm run check-duplicates
+
       - name: Comment lint and type-check results on PR
         if: ${{ github.event_name == 'pull_request' && !cancelled() }}
         # Fork PRs get a read-only token; the annotations above still apply there.
@@ -155,7 +159,21 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test:coverage
+        id: test
+        run: |
+          set -o pipefail
+          npm run test:coverage 2>&1 | tee test-output.txt
+
+      - name: Report test failures to summary
+        if: failure()
+        run: |
+          {
+            echo '## ❌ Unit Test Failures'
+            echo ''
+            echo '```'
+            tail -n 100 test-output.txt || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload coverage report
         if: always()

@@ -200,6 +200,10 @@ export default defineConfig({
     }),
   ],
   resolve: {
+    // Force a single copy of these packages even if a dependency bundles or
+    // resolves its own nested copy, preventing duplicate-React/Three.js bundle
+    // bloat and "Invalid hook call" errors from two React copies (#381).
+    dedupe: ['react', 'react-dom', 'three'],
     alias: {
       '@': resolve(__dirname, 'src'),
       '@components': resolve(__dirname, 'src/components'),
@@ -224,6 +228,12 @@ export default defineConfig({
         // Code splitting by features
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            // Sentry is loaded via dynamic import (src/services/sentryClient.ts), never
+            // statically, so it is never pulled into the critical-path chunks below. Give
+            // it its own named chunk anyway so it stays cacheable independently (#382).
+            if (id.includes('@sentry')) {
+              return 'monitoring'
+            }
             if (id.includes('three') || id.includes('@react-three')) {
               return 'feature-three'
             }

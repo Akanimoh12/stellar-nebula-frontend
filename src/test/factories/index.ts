@@ -27,3 +27,6 @@ export type {
 export * from './wallet'
 export * from './gameState'
 export * from './contracts'
+export * from './user.factory'
+export * from './nebula.factory'
+

@@ -45,6 +45,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
+          exclude: ['src/__tests__/integration/**', 'e2e/**'],
           environment: 'happy-dom',
           globals: true,
           setupFiles: ['./src/test/setup.ts'],
@@ -67,6 +68,12 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'integration',
+          include: ['src/__tests__/integration/**/*.{test,spec}.{ts,tsx}'],
+          environment: 'happy-dom',
+          globals: true,
+          setupFiles: ['./src/test/setup.ts'],
+          testTimeout: 20000,
           name: 'performance',
           include: ['test/performance/**/*.{test,spec}.{ts,tsx}'],
           environment: 'happy-dom',

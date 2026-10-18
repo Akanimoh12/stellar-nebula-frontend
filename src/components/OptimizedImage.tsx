@@ -17,6 +17,8 @@ export interface OptimizedImageProps {
   sizes?: string
   loading?: 'lazy' | 'eager'
   srcSet?: string
+  /** WebP version of `src`; `src` stays the fallback for browsers without WebP support. */
+  webpSrc?: string
 }
 
 export function OptimizedImage({
@@ -28,6 +30,7 @@ export function OptimizedImage({
   sizes,
   loading = 'lazy',
   srcSet,
+  webpSrc,
 }: OptimizedImageProps) {
   const imgRef = useRef<HTMLImageElement>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -42,6 +45,25 @@ export function OptimizedImage({
 
   const handleLoad = () => {
     setIsLoaded(true)
+  }
+
+  if (webpSrc) {
+    return (
+      <picture>
+        <source type="image/webp" srcSet={webpSrc} sizes={sizes} />
+        <img
+          src={src}
+          srcSet={srcSet}
+          alt={alt}
+          width={width}
+          height={height}
+          sizes={sizes}
+          className={className}
+          loading={loading}
+          decoding="async"
+        />
+      </picture>
+    )
   }
 
   if (loading === 'eager') {

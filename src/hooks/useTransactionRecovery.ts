@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useGameStore, type OptimisticGameOperation } from '@/store/gameStore'
 import { trackEvent } from '@/services/analytics'
 import { useTransactionRetry, type UseTransactionRetryReturn } from './useTransactionRetry'
@@ -54,22 +54,18 @@ export function useTransactionRecovery<TPayload = unknown>({
   getLabel,
   onOutcome,
 }: UseTransactionRecoveryOptions): TransactionRecovery {
-  const [isDismissed, setIsDismissed] = useState(false)
-  const [hasSucceeded, setHasSucceeded] = useState(false)
-  const [lastError, setLastError] = useState<unknown>(null)
-  const attemptCountRef = useRef(0)
-
-  const lastAttemptErrorRef = useRef<unknown>(null)
+  const lastSubmitAttemptRef = useRef(0)
+  const lastSubmitErrorRef = useRef<unknown>(null)
 
   const wrappedSubmit = useCallback(
     async (payload: unknown, attemptNum: number) => {
-      attemptCountRef.current += 1
+      lastSubmitAttemptRef.current = attemptNum
       try {
-        const result = await submit(payload, attemptNum)
-        lastAttemptErrorRef.current = null
-        return result
+        const res = await submit(payload, attemptNum)
+        lastSubmitErrorRef.current = null
+        return res
       } catch (err) {
-        lastAttemptErrorRef.current = err
+        lastSubmitErrorRef.current = err
         throw err
       }
     },
@@ -85,21 +81,17 @@ export function useTransactionRecovery<TPayload = unknown>({
     getLabel,
   })
 
+  const [dismissedId, setDismissedId] = useState<string | null>(null)
+
+  // The store is read directly rather than through a selector so the recovery
+  // surface and the store cannot disagree about what failed.
   const failedOperation = useGameStore((state) =>
     state.optimisticOperations.find((op) => op.status === 'failed')
   )
 
-  const lastFailedOpIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (failedOperation?.id && failedOperation.id !== lastFailedOpIdRef.current) {
-      lastFailedOpIdRef.current = failedOperation.id
-      setIsDismissed(false)
-      setHasSucceeded(false)
-      setLastError(null)
-      lastAttemptErrorRef.current = null
-      attemptCountRef.current = 0
-    }
-  }, [failedOperation?.id])
+  const currentFailureId =
+    retryState.lastFailure?.transactionId ?? (failedOperation ? failedOperation.id : null)
+  const isDismissed = dismissedId !== null && dismissedId === currentFailureId
 
   const report = useCallback(
     (outcome: Omit<RecoveryOutcome, 'operationId' | 'transactionId'>) => {
@@ -107,6 +99,7 @@ export function useTransactionRecovery<TPayload = unknown>({
         ...outcome,
         operationId: failedOperation?.id ?? null,
         transactionId: retryState.lastFailure?.transactionId ?? null,
+        errorType: errorTypeOf(lastSubmitErrorRef.current ?? outcome.error),
       }
 
       if (onOutcome) {
@@ -138,74 +131,50 @@ export function useTransactionRecovery<TPayload = unknown>({
   )
 
   const retry = useCallback(async (): Promise<boolean> => {
-    if (hasSucceeded) return false
-    const hadFailure = retryState.lastFailure !== null || failedOperation !== undefined
+    const hadFailure =
+      (!isDismissed && failedOperation !== undefined) || retryState.lastFailure !== null
     if (!hadFailure) return false
 
-    attemptCountRef.current = 0
-    lastAttemptErrorRef.current = null
     if (!retryState.lastFailure && failedOperation) {
       retryState.recordFailure(
-        failedOperation.operation as TPayload,
+        failedOperation.operation as unknown as TPayload,
         new Error(failedOperation.error ?? 'Transaction failed'),
         failedOperation.label
       )
     }
 
-    let caughtError: unknown = null
-    let succeeded = false
-    try {
-      succeeded = await retryState.retry()
-    } catch (err) {
-      caughtError = err
+    const succeeded = await retryState.retry()
+    if (succeeded && currentFailureId) {
+      setDismissedId(currentFailureId)
     }
-
-    if (succeeded) {
-      setHasSucceeded(true)
-      setLastError(null)
-    } else {
-      const attemptError = caughtError ?? lastAttemptErrorRef.current
-      if (attemptError) {
-        setLastError(attemptError)
-      }
-    }
-
-    const finalError =
-      (succeeded ? null : (caughtError ?? lastAttemptErrorRef.current)) ??
-      lastError ??
-      retryState.lastFailure?.error ??
-      failedOperation?.error ??
-      null
-    const finalErrorMessage =
-      finalError instanceof Error
-        ? finalError.message
-        : typeof finalError === 'string'
-          ? finalError
-          : null
+    const attemptCount = Math.max(1, lastSubmitAttemptRef.current || retryState.attempt)
+    const errText = succeeded
+      ? null
+      : lastSubmitErrorRef.current instanceof Error
+        ? lastSubmitErrorRef.current.message
+        : typeof lastSubmitErrorRef.current === 'string'
+          ? lastSubmitErrorRef.current
+          : (retryState.lastFailure?.error ?? failedOperation?.error ?? null)
 
     report({
       status: succeeded ? 'retry_succeeded' : 'retry_failed',
-      attempts: Math.max(1, attemptCountRef.current, retryState.attempt),
-      error: succeeded ? null : finalErrorMessage,
-      errorType: succeeded ? null : errorTypeOf(finalError),
+      attempts: attemptCount,
+      error: errText,
     })
     return succeeded
-  }, [failedOperation, hasSucceeded, lastError, report, retryState])
+  }, [currentFailureId, failedOperation, isDismissed, report, retryState])
 
   const dismiss = useCallback(() => {
+    // Report what happened, not what was asked for: dismissing with nothing on
+    // screen would otherwise inflate the dismissal count in analytics.
     const hadFailure =
       !isDismissed && (retryState.lastFailure !== null || failedOperation !== undefined)
-    setIsDismissed(true)
-    retryState.clear()
-    if (hadFailure) {
-      report({
-        status: 'dismissed',
-        attempts: retryState.attempt,
-        error: null,
-        errorType: null,
-      })
+    if (currentFailureId) {
+      setDismissedId(currentFailureId)
     }
-  }, [failedOperation, isDismissed, report, retryState])
+    retryState.clear()
+    if (hadFailure) report({ status: 'dismissed', attempts: retryState.attempt, error: null })
+  }, [currentFailureId, failedOperation, isDismissed, report, retryState])
 
   const rollback = useCallback(() => {
     const store = useGameStore.getState()
@@ -216,7 +185,7 @@ export function useTransactionRecovery<TPayload = unknown>({
       store.rollbackOperation(operation.id, operation.error ?? 'Rolled back by user')
     }
 
-    setIsDismissed(true)
+    setDismissedId(null)
     retryState.clear()
     if (operation) {
       report({
@@ -241,14 +210,17 @@ export function useTransactionRecovery<TPayload = unknown>({
 
   return useMemo(
     () => ({
-      hasFailure,
-      error: hasFailure ? currentError : null,
+      hasFailure:
+        !isDismissed && (retryState.lastFailure !== null || failedOperation !== undefined),
+      error: !isDismissed
+        ? (retryState.lastFailure?.error ?? failedOperation?.error ?? null)
+        : null,
       attempt: retryState.attempt,
       isRetrying: retryState.isRetrying,
       retry,
       dismiss,
       rollback,
     }),
-    [currentError, dismiss, hasFailure, retry, retryState.attempt, retryState.isRetrying, rollback]
+    [dismiss, failedOperation, isDismissed, retry, retryState, rollback]
   )
 }

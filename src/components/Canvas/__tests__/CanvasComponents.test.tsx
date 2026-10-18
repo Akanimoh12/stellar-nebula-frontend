@@ -60,7 +60,7 @@ describe('Canvas components', () => {
     it('exports NebulaCanvas component', async () => {
       const mod = await import('../NebulaCanvas')
       expect(['function', 'object']).toContain(typeof mod.NebulaCanvas)
-    }, 30000)
+    })
 
     it('exports NebulaScene component', async () => {
       const mod = await import('../NebulaScene')

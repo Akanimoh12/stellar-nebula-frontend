@@ -1,0 +1,48 @@
+/* Skip Navigation Links Styles */
+.skip-link {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  z-index: 10000;
+  text-decoration: none;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  top: 1rem;
+  left: 1rem;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  padding: 0.75rem 1.25rem;
+  background: #e879f9;
+  color: #050716;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(232, 121, 249, 0.4);
+  outline: 3px solid #38bdf8;
+  outline-offset: 2px;
+  display: inline-block;
+  transition: transform 0.15s ease-in-out;
+}
+
+.skip-links-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.skip-links-container .skip-link:focus,
+.skip-links-container .skip-link:focus-visible {
+  pointer-events: auto;
+}

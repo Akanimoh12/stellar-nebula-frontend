@@ -382,9 +382,10 @@ export const useGameStore = create<GameStore>()(
 
         removeScanCooldown: (nebulaId) =>
           set((state) => {
-            const remaining = state.scanCooldowns.filter((c) => c.nebulaId !== nebulaId)
-            if (remaining.length === state.scanCooldowns.length) return state
-            return { scanCooldowns: remaining }
+            if (!state.scanCooldowns.some((c) => c.nebulaId === nebulaId)) return state
+            return {
+              scanCooldowns: state.scanCooldowns.filter((c) => c.nebulaId !== nebulaId),
+            }
           }),
 
         pruneExpiredCooldowns: () =>

@@ -23,12 +23,16 @@ function AppLayout() {
   return (
     <div className="app-shell">
       <NotificationBootstrap />
+      <Navigation />
+      <main id="main-content" className="app-main">
+        <Outlet />
+      </main>
       <AchievementNotifier />
       {/* OnboardingWelcome is shown once to brand-new users before the step tour */}
       <OnboardingWelcome />
       <TutorialFlow />
       <Navigation />
-      <main className="app-main">
+      <main id="main-content" className="app-main">
         <Outlet />
       </main>
       <Footer />

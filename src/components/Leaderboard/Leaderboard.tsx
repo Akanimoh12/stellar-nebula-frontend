@@ -92,25 +92,41 @@ export function Leaderboard() {
 
   if (loading && !leaderboard) {
     return (
-      <div className="leaderboard-empty" role="status">
-        Loading leaderboard...
-      </div>
+      <section className="leaderboard-panel" aria-label="Galactic leaderboard">
+        <div className="leaderboard-header">
+          <div>
+            <p className="eyebrow">Competition</p>
+            <h1>Galactic Leaderboard</h1>
+          </div>
+        </div>
+        <div className="leaderboard-empty" role="status">
+          Loading leaderboard...
+        </div>
+      </section>
     )
   }
 
   if (error) {
     return (
-      <div className="leaderboard-empty leaderboard-error" role="alert">
-        <p>{error}</p>
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={() => void loadLeaderboard()}
-          aria-label="Retry loading leaderboard"
-        >
-          Retry
-        </button>
-      </div>
+      <section className="leaderboard-panel" aria-label="Galactic leaderboard">
+        <div className="leaderboard-header">
+          <div>
+            <p className="eyebrow">Competition</p>
+            <h1>Galactic Leaderboard</h1>
+          </div>
+        </div>
+        <div className="leaderboard-empty leaderboard-error" role="alert">
+          <p>{error}</p>
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => void loadLeaderboard()}
+            aria-label="Retry loading leaderboard"
+          >
+            Retry
+          </button>
+        </div>
+      </section>
     )
   }
 

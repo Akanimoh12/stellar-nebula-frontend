@@ -49,7 +49,7 @@ describe('Modal focus management', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }))
 
-    // The first focusable control inside the panel is the close button in the header.
+    // The first focusable control inside the panel, not the trigger that opened it.
     expect(screen.getByRole('button', { name: 'Close dialog' })).toHaveFocus()
   })
 
@@ -75,7 +75,7 @@ describe('Modal focus management', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }))
 
-    // Advancing with Tab from the initial close button visits the actions, then wraps.
+    // Moving focus forward from the initial close button through the actions, then wrapping.
     const inDialog = [
       screen.getByRole('button', { name: 'First action' }),
       screen.getByRole('button', { name: 'Second action' }),

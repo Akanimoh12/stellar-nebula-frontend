@@ -96,10 +96,10 @@ export function initWebVitalsMonitoring(onReport?: (metric: WebVitalMetric) => v
     let largestLcp = 0
     const lcpObserver = new PerformanceObserver((entryList) => {
       const entries = entryList.getEntries()
-      const lastEntry = entries[entries.length - 1]
+      const lastEntry = entries[entries.length - 1] as PerformanceEntry & { id?: string }
       if (lastEntry && lastEntry.startTime > largestLcp) {
         largestLcp = lastEntry.startTime
-        report('LCP', largestLcp, (lastEntry as any).id || 'lcp-element')
+        report('LCP', largestLcp, lastEntry.id || 'lcp-element')
       }
     })
     lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true })
@@ -112,9 +112,12 @@ export function initWebVitalsMonitoring(onReport?: (metric: WebVitalMetric) => v
   try {
     let clsValue = 0
     const clsObserver = new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries() as any[]) {
+      const entries = entryList.getEntries() as Array<
+        PerformanceEntry & { hadRecentInput?: boolean; value?: number }
+      >
+      for (const entry of entries) {
         if (!entry.hadRecentInput) {
-          clsValue += entry.value
+          clsValue += entry.value ?? 0
           report('CLS', clsValue, 'layout-shift')
         }
       }
@@ -128,8 +131,10 @@ export function initWebVitalsMonitoring(onReport?: (metric: WebVitalMetric) => v
   // 5. FID (First Input Delay)
   try {
     const fidObserver = new PerformanceObserver((entryList) => {
-      const firstInput = entryList.getEntries()[0] as any
-      if (firstInput) {
+      const firstInput = entryList.getEntries()[0] as
+        | (PerformanceEntry & { processingStart?: number })
+        | undefined
+      if (firstInput && typeof firstInput.processingStart === 'number') {
         const fid = firstInput.processingStart - firstInput.startTime
         report('FID', fid, firstInput.name)
       }

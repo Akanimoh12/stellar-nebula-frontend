@@ -53,7 +53,7 @@ export function ContractEventFeed({ defaultContractId = '' }: ContractEventFeedP
       <div style={headerStyle}>
         <div>
           <p style={eyebrowStyle}>Contract events</p>
-          <h3 style={titleStyle}>Live event listener</h3>
+          <h2 style={titleStyle}>Live event listener</h2>
           <p style={copyStyle}>
             Horizon keeps the stream live while RPC fetches the contract events for the selected
             contract ID.
@@ -67,7 +67,7 @@ export function ContractEventFeed({ defaultContractId = '' }: ContractEventFeedP
       <label htmlFor={contractIdInputId} style={fieldStyle}>
         <span style={fieldLabelStyle}>Contract ID</span>
         <input
-          id={contractIdInputId}
+          aria-label="Contract ID"
           value={contractId}
           onChange={(event) => setContractId(event.target.value.trim())}
           placeholder="C..."

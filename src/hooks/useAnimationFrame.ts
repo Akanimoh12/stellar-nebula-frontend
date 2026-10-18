@@ -57,7 +57,9 @@ export function useAnimationFrame(
   const isPaused = !enabled || manuallyPaused || (pauseWhenHidden && !isVisible)
 
   const callbackRef = useRef(callback)
-  callbackRef.current = callback
+  useEffect(() => {
+    callbackRef.current = callback
+  })
 
   const rafIdRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number | null>(null)
@@ -65,7 +67,7 @@ export function useAnimationFrame(
   const minFrameInterval = fpsLimit && fpsLimit > 0 ? 1000 / fpsLimit : 0
 
   const loop = useCallback(
-    (timestamp: number) => {
+    function frame(timestamp: number) {
       if (lastTimeRef.current === null) {
         lastTimeRef.current = timestamp
       }
@@ -83,7 +85,7 @@ export function useAnimationFrame(
         })
       }
 
-      rafIdRef.current = requestAnimationFrame(loop)
+      rafIdRef.current = requestAnimationFrame(frame)
     },
     [minFrameInterval]
   )
@@ -99,7 +101,7 @@ export function useAnimationFrame(
       return
     }
 
-    rafIdRef.current = requestAnimationFrame(loop)
+    rafIdRef.current = requestAnimationFrame(step)
 
     return () => {
       if (rafIdRef.current !== null) {
@@ -108,7 +110,7 @@ export function useAnimationFrame(
       }
       lastTimeRef.current = null
     }
-  }, [isPaused, loop])
+  }, [isPaused, minFrameInterval])
 
   const pause = useCallback(() => setManuallyPaused(true), [])
   const resume = useCallback(() => setManuallyPaused(false), [])

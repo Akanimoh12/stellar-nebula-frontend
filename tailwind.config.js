@@ -34,6 +34,7 @@ export default {
       boxShadow: {
         cosmic: '0 24px 80px rgba(124, 58, 237, 0.22)',
         'nebula-glow': '0 0 32px rgba(232, 121, 249, 0.28)',
+        'focus-ring': '0 0 0 3px #e879f9',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],

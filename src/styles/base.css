@@ -37,3 +37,52 @@ button {
 button:disabled {
   cursor: not-allowed;
 }
+
+/* ── Focus indicators (issue #397) ─────────────────────────────────────────
+   Removed browser defaults are a WCAG 2.1 SC 2.4.7 violation. This rule
+   restores a high-visibility 3 px ring for keyboard users while keeping the
+   UI clean for pointer users via :focus-visible. The nebula-core colour
+   (#e879f9) meets the 3:1 non-text contrast ratio against the dark
+   background (#050716). An additional 2 px transparent offset doubles as a
+   Windows High-Contrast border. */
+*:focus {
+  outline: none; /* suppress UA default; :focus-visible below handles kbd */
+}
+
+*:focus-visible {
+  outline: 3px solid #e879f9;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Anchors inside prose often have their own underline affordance; keep the
+   ring but drop border-radius so it hugs the text shape. */
+a:focus-visible {
+  border-radius: 2px;
+}
+
+/* Skip-link — hidden until focused (issue #385 / #397). Positioned in the
+   top-left corner so keyboard users can jump past the nav without waiting
+   for Tab to reach main content. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.skip-link:focus-visible {
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: #e879f9;
+  color: #050716;
+  font-weight: 700;
+  border-radius: 6px;
+}

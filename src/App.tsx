@@ -7,6 +7,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { InstallPrompt } from './components/PWA/InstallPrompt'
 import { OfflineIndicator } from './components/PWA/OfflineIndicator'
 import { router } from './routes'
+import { SkipLinks } from './components/SkipLink'
 import './App.css'
 import { createScopedLogger } from './services/logging'
 import { analytics } from './services/analytics'
@@ -48,6 +49,7 @@ function App() {
 
   return (
     <ThemeProvider>
+      <SkipLinks />
       <ErrorBoundary>
         <WalletProvider>
           <NotificationProvider>

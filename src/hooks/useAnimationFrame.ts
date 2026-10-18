@@ -59,25 +59,15 @@ export function useAnimationFrame(
   const callbackRef = useRef(callback)
   useEffect(() => {
     callbackRef.current = callback
-  }, [callback])
+  })
 
   const rafIdRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number | null>(null)
   const frameCountRef = useRef<number>(0)
   const minFrameInterval = fpsLimit && fpsLimit > 0 ? 1000 / fpsLimit : 0
 
-  useEffect(() => {
-    if (isPaused) {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current)
-        rafIdRef.current = null
-      }
-      // Reset lastTimeRef so resuming does not cause a huge delta jump
-      lastTimeRef.current = null
-      return
-    }
-
-    const step = (timestamp: number) => {
+  const loop = useCallback(
+    function frame(timestamp: number) {
       if (lastTimeRef.current === null) {
         lastTimeRef.current = timestamp
       }
@@ -95,7 +85,20 @@ export function useAnimationFrame(
         })
       }
 
-      rafIdRef.current = requestAnimationFrame(step)
+      rafIdRef.current = requestAnimationFrame(frame)
+    },
+    [minFrameInterval]
+  )
+
+  useEffect(() => {
+    if (isPaused) {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
+      // Reset lastTimeRef so resuming does not cause a huge delta jump
+      lastTimeRef.current = null
+      return
     }
 
     rafIdRef.current = requestAnimationFrame(step)

@@ -46,6 +46,15 @@ export default defineConfig([
         'error',
         { tags: [], roles: ['tabpanel', 'application'], allowExpressionValues: true },
       ],
+      // Enforce accessible names for buttons and interactive controls
+      'jsx-a11y/control-has-associated-label': [
+        'error',
+        {
+          labelAttributes: ['aria-label', 'aria-labelledby'],
+          controlComponents: ['IconButton'],
+          depth: 3,
+        },
+      ],
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'jsx-a11y/heading-has-content': 'error',

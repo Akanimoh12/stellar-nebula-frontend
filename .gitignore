@@ -46,3 +46,6 @@ stats.json
 # Bundle analysis reports (scripts/bundle-analysis.mjs)
 bundle-report.json
 bundle-report.md
+
+# Test coverage reports
+coverage/

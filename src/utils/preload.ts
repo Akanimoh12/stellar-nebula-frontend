@@ -86,7 +86,7 @@ export async function preloadFont(
     const font = new FontFace(family, `url(${sourceUrl})`, descriptors)
     await font.load()
     document.fonts.add(font)
-  } catch {
+  } catch (_err) {
     // Graceful fallback to browser standard discovery
     preloadAsset(sourceUrl, 'font', { crossOrigin: 'anonymous' })
   }
@@ -127,8 +127,12 @@ export function preloadCriticalAssets(): void {
     }
   }
 
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(executePreload, { timeout: 2000 })
+  const win = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+  }
+
+  if (typeof win.requestIdleCallback === 'function') {
+    win.requestIdleCallback(executePreload, { timeout: 2000 })
   } else {
     setTimeout(executePreload, 1)
   }

@@ -96,11 +96,10 @@ export function initWebVitalsMonitoring(onReport?: (metric: WebVitalMetric) => v
     let largestLcp = 0
     const lcpObserver = new PerformanceObserver((entryList) => {
       const entries = entryList.getEntries()
-      const lastEntry = entries[entries.length - 1]
+      const lastEntry = entries[entries.length - 1] as PerformanceEntry & { id?: string }
       if (lastEntry && lastEntry.startTime > largestLcp) {
         largestLcp = lastEntry.startTime
-        const lcpEntry = lastEntry as PerformanceEntry & { id?: string }
-        report('LCP', largestLcp, lcpEntry.id || 'lcp-element')
+        report('LCP', largestLcp, lastEntry.id || 'lcp-element')
       }
     })
     lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true })
@@ -113,11 +112,12 @@ export function initWebVitalsMonitoring(onReport?: (metric: WebVitalMetric) => v
   try {
     let clsValue = 0
     const clsObserver = new PerformanceObserver((entryList) => {
-      for (const entry of entryList.getEntries() as Array<
+      const entries = entryList.getEntries() as Array<
         PerformanceEntry & { hadRecentInput?: boolean; value?: number }
-      >) {
-        if (!entry.hadRecentInput && typeof entry.value === 'number') {
-          clsValue += entry.value
+      >
+      for (const entry of entries) {
+        if (!entry.hadRecentInput) {
+          clsValue += entry.value ?? 0
           report('CLS', clsValue, 'layout-shift')
         }
       }
@@ -132,9 +132,9 @@ export function initWebVitalsMonitoring(onReport?: (metric: WebVitalMetric) => v
   try {
     const fidObserver = new PerformanceObserver((entryList) => {
       const firstInput = entryList.getEntries()[0] as
-        | (PerformanceEntry & { processingStart: number })
+        | (PerformanceEntry & { processingStart?: number })
         | undefined
-      if (firstInput) {
+      if (firstInput && typeof firstInput.processingStart === 'number') {
         const fid = firstInput.processingStart - firstInput.startTime
         report('FID', fid, firstInput.name)
       }

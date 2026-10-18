@@ -31,6 +31,10 @@ function AppLayout() {
       {/* OnboardingWelcome is shown once to brand-new users before the step tour */}
       <OnboardingWelcome />
       <TutorialFlow />
+      <Navigation />
+      <main id="main-content" className="app-main">
+        <Outlet />
+      </main>
       <Footer />
     </div>
   )

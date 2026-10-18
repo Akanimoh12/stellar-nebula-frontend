@@ -37,17 +37,10 @@ export type { FrameInfo, UseAnimationFrameOptions } from './useAnimationFrame'
 export { useWebVitals, initWebVitalsMonitoring } from './useWebVitals'
 export type { WebVitalRating, WebVitalsState } from './useWebVitals'
 export {
-  useReducedMotion,
-  REDUCED_MOTION_STORAGE_KEY,
-  ANIMATION_PAUSED_STORAGE_KEY,
-} from './useReducedMotion'
-export type { UseReducedMotionReturn } from './useReducedMotion'
-export { useCombobox } from './useCombobox'
-export type {
-  ComboboxOption,
-  UseComboboxOptions,
-  UseComboboxReturn,
-  ComboboxTriggerProps,
-  ComboboxListboxProps,
-  ComboboxOptionProps,
-} from './useCombobox'
+  useLanguage,
+  detectBrowserLanguage,
+  SUPPORTED_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  LANGUAGE_STORAGE_KEY,
+} from './useLanguage'
+export type { SupportedLanguageCode, UseLanguageReturn } from './useLanguage'

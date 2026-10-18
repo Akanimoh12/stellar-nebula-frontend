@@ -41,27 +41,29 @@ export function onVisibilityChange(onVisible?: () => void, onHidden?: () => void
   }
 }
 
-/**
- * Returns battery status API if supported by the browser.
- */
-export async function getBatteryStatus(): Promise<{
+interface BatteryManager {
   charging?: boolean
   level?: number
   chargingTime?: number
   dischargingTime?: number
-} | null> {
-  if (typeof navigator === 'undefined' || !('getBattery' in navigator)) {
+}
+
+interface NavigatorWithBattery extends Navigator {
+  getBattery?: () => Promise<BatteryManager>
+}
+
+/**
+ * Returns battery status API if supported by the browser.
+ */
+export async function getBatteryStatus(): Promise<BatteryManager | null> {
+  if (typeof navigator === 'undefined') {
+    return null
+  }
+  const nav = navigator as NavigatorWithBattery
+  if (typeof nav.getBattery !== 'function') {
     return null
   }
   try {
-    const nav = navigator as Navigator & {
-      getBattery: () => Promise<{
-        charging?: boolean
-        level?: number
-        chargingTime?: number
-        dischargingTime?: number
-      }>
-    }
     const battery = await nav.getBattery()
     return {
       charging: battery.charging,

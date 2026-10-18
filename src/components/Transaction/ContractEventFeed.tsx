@@ -67,7 +67,7 @@ export function ContractEventFeed({ defaultContractId = '' }: ContractEventFeedP
       <label htmlFor={contractIdInputId} style={fieldStyle}>
         <span style={fieldLabelStyle}>Contract ID</span>
         <input
-          id={contractIdInputId}
+          aria-label="Contract ID"
           value={contractId}
           onChange={(event) => setContractId(event.target.value.trim())}
           placeholder="C..."

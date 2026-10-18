@@ -37,9 +37,12 @@ export function useFrameRateMonitor({
   useEffect(() => {
     if (!enabled) return
 
+    let isDocumentVisible = typeof document === 'undefined' ? true : !document.hidden
     lastTimestampRef.current = performance.now()
 
     const tick = (timestamp: number) => {
+      if (!isDocumentVisible) return
+
       frameCountRef.current += 1
 
       if (lastTimestampRef.current === null) {
@@ -73,10 +76,31 @@ export function useFrameRateMonitor({
       rafRef.current = requestAnimationFrame(tick)
     }
 
-    rafRef.current = requestAnimationFrame(tick)
+    const handleVisibility = () => {
+      if (typeof document === 'undefined') return
+      isDocumentVisible = !document.hidden
+      if (isDocumentVisible) {
+        lastTimestampRef.current = performance.now()
+        frameCountRef.current = 0
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        cancelAnimationFrame(rafRef.current)
+      }
+    }
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility)
+    }
+
+    if (isDocumentVisible) {
+      rafRef.current = requestAnimationFrame(tick)
+    }
 
     return () => {
       cancelAnimationFrame(rafRef.current)
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility)
+      }
     }
   }, [enabled, onSample, sampleWindowMs, targetFps])
 

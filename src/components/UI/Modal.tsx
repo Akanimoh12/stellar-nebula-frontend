@@ -55,7 +55,7 @@ export function Modal({
   // dialog in the app owes the user, so it is one shared implementation.
   const panelRef = useFocusTrap<HTMLDivElement>({
     active: isOpen,
-    onEscape: closeOnEsc ? onClose : undefined
+    onEscape: closeOnEsc ? onClose : undefined,
   })
 
   if (!isOpen) return null
@@ -69,6 +69,7 @@ export function Modal({
           type="button"
           className="ui-modal-backdrop-close"
           aria-label="Close dialog"
+          aria-hidden="true"
           tabIndex={-1}
           onClick={onClose}
         />

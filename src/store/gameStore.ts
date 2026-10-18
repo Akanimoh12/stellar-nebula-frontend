@@ -369,7 +369,9 @@ export const useGameStore = create<GameStore>()(
             )
             const existing = live.find((c) => c.nebulaId === nebulaId)
             const readyAt = new Date(
-              existing ? Math.max(requestedReadyAt, new Date(existing.readyAt).getTime()) : requestedReadyAt
+              existing
+                ? Math.max(requestedReadyAt, new Date(existing.readyAt).getTime())
+                : requestedReadyAt
             ).toISOString()
 
             if (!existing) return { scanCooldowns: [...live, { nebulaId, readyAt }] }
@@ -379,9 +381,11 @@ export const useGameStore = create<GameStore>()(
           }),
 
         removeScanCooldown: (nebulaId) =>
-          set((state) => ({
-            scanCooldowns: state.scanCooldowns.filter((c) => c.nebulaId !== nebulaId),
-          })),
+          set((state) => {
+            const remaining = state.scanCooldowns.filter((c) => c.nebulaId !== nebulaId)
+            if (remaining.length === state.scanCooldowns.length) return state
+            return { scanCooldowns: remaining }
+          }),
 
         pruneExpiredCooldowns: () =>
           set((state) => ({

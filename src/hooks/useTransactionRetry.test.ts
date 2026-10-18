@@ -50,7 +50,8 @@ describe('useTransactionRetry', () => {
     })
     // Flush the two backoff sleeps (1000ms, 2000ms).
     await act(async () => {
-      vi.advanceTimersByTime(3000)
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(2000)
     })
 
     expect(submit).toHaveBeenCalledTimes(3)
@@ -93,7 +94,8 @@ describe('useTransactionRetry', () => {
     })
     // Three attempts: 1000ms + 2000ms sleep between them.
     await act(async () => {
-      vi.advanceTimersByTime(4000)
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(2000)
     })
 
     expect(submit).toHaveBeenCalledTimes(3)

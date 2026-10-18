@@ -153,7 +153,7 @@ export const TradeForm: React.FC<TradeFormProps> = ({
             />
             <button
               type="button"
-              aria-label={`Set amount to maximum 100 ${baseAsset.code}`}
+              title={`Set amount to maximum ${maxAmount ?? ''} ${baseAsset.code}`}
               className="absolute right-2 text-xs text-cosmic-cyan hover:text-white"
               onClick={() => setValue('amount', String(maxAmount))}
             >

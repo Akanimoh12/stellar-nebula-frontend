@@ -1,90 +1,90 @@
 {
-  "timestamp": "2026-10-18T02:00:29.469Z",
+  "timestamp": "2026-10-18T13:46:37.175Z",
   "total": {
-    "raw": 3629621,
-    "gzip": 1023806,
-    "brotli": 844515,
+    "raw": 3784618,
+    "gzip": 1062358,
+    "brotli": 876194,
     "formatted": {
-      "raw": "3.46 MB",
-      "gzip": "999.8 kB",
-      "brotli": "824.7 kB"
+      "raw": "3.61 MB",
+      "gzip": "1.01 MB",
+      "brotli": "855.7 kB"
     }
   },
   "css": {
-    "raw": 36816,
-    "gzip": 8265,
+    "raw": 37221,
+    "gzip": 8434,
     "formatted": {
-      "raw": "36.0 kB",
-      "gzip": "8.1 kB"
+      "raw": "36.3 kB",
+      "gzip": "8.2 kB"
     }
   },
   "chunks": [
     {
-      "file": "assets/vendor-Ddf_Naun.js",
-      "name": "vendor-Ddf_Naun.js",
+      "file": "dist\\assets\\vendor-oG8LEfct.js",
+      "name": "vendor-oG8LEfct.js",
       "category": "vendor",
-      "raw": 1442741,
-      "gzip": 438940,
-      "brotli": 354749
+      "raw": 1442745,
+      "gzip": 438931,
+      "brotli": 354761
     },
     {
-      "file": "assets/feature-three-CQC-Qe5G.js",
-      "name": "feature-three-CQC-Qe5G.js",
+      "file": "dist\\assets\\feature-three-B4_fg_xj.js",
+      "name": "feature-three-B4_fg_xj.js",
       "category": "feature-three",
       "raw": 912693,
       "gzip": 248076,
-      "brotli": 204049
+      "brotli": 204166
     },
     {
-      "file": "assets/feature-stellar-B0zG1b32.js",
-      "name": "feature-stellar-B0zG1b32.js",
+      "file": "dist\\assets\\feature-stellar-D2gKuQQ6.js",
+      "name": "feature-stellar-D2gKuQQ6.js",
       "category": "feature-stellar",
-      "raw": 671344,
-      "gzip": 144644,
-      "brotli": 118339
+      "raw": 819099,
+      "gzip": 181108,
+      "brotli": 147963
     },
     {
-      "file": "assets/react-vendor-C-GUp3Bp.js",
-      "name": "react-vendor-C-GUp3Bp.js",
+      "file": "dist\\assets\\react-vendor-DI7d4SaP.js",
+      "name": "react-vendor-DI7d4SaP.js",
       "category": "react-vendor",
       "raw": 258327,
-      "gzip": 83127,
-      "brotli": 71810
+      "gzip": 83130,
+      "brotli": 71816
     },
     {
-      "file": "assets/App-BNfq612S.js",
-      "name": "App-BNfq612S.js",
+      "file": "dist\\assets\\App-DPy58HQU.js",
+      "name": "App-DPy58HQU.js",
       "category": "other",
-      "raw": 89873,
-      "gzip": 26665,
-      "brotli": 23106
+      "raw": 90666,
+      "gzip": 26759,
+      "brotli": 23173
     },
     {
-      "file": "assets/NebulaView-BEBg9SPP.js",
-      "name": "NebulaView-BEBg9SPP.js",
+      "file": "dist\\assets\\NebulaView-Dj7F4uVJ.js",
+      "name": "NebulaView-Dj7F4uVJ.js",
       "category": "other",
-      "raw": 48473,
-      "gzip": 16650,
-      "brotli": 14630
+      "raw": 49528,
+      "gzip": 16853,
+      "brotli": 14858
     },
     {
-      "file": "assets/ShipDashboard-Bme7tFPh.js",
-      "name": "ShipDashboard-Bme7tFPh.js",
+      "file": "dist\\assets\\ShipDashboard-D1a1XAnZ.js",
+      "name": "ShipDashboard-D1a1XAnZ.js",
       "category": "other",
-      "raw": 45903,
-      "gzip": 14694,
+      "raw": 45922,
+      "gzip": 14702,
       "brotli": 13038
     },
     {
-      "file": "assets/env-CdBoBB9Y.js",
-      "name": "env-CdBoBB9Y.js",
+      "file": "dist\\assets\\env-D6-Ij9ck.js",
+      "name": "env-D6-Ij9ck.js",
       "category": "other",
-      "raw": 31552,
-      "gzip": 9254,
-      "brotli": 8243
+      "raw": 32528,
+      "gzip": 9592,
+      "brotli": 8557
     },
     {
-      "file": "workbox-d835d9c0.js",
+      "file": "dist\\workbox-d835d9c0.js",
       "name": "workbox-d835d9c0.js",
       "category": "other",
       "raw": 23353,
@@ -92,92 +92,92 @@
       "brotli": 7122
     },
     {
-      "file": "assets/Marketplace-C8wzR5lD.js",
-      "name": "Marketplace-C8wzR5lD.js",
+      "file": "dist\\assets\\Marketplace-DlEk_s0d.js",
+      "name": "Marketplace-DlEk_s0d.js",
       "category": "other",
       "raw": 14432,
-      "gzip": 4887,
-      "brotli": 4302
+      "gzip": 4888,
+      "brotli": 4306
     },
     {
-      "file": "assets/WalletDisplay-Dny_tgID.js",
-      "name": "WalletDisplay-Dny_tgID.js",
+      "file": "dist\\assets\\WalletDisplay-BI_cd7_1.js",
+      "name": "WalletDisplay-BI_cd7_1.js",
       "category": "other",
-      "raw": 13939,
-      "gzip": 4697,
-      "brotli": 4163
+      "raw": 13970,
+      "gzip": 4708,
+      "brotli": 4164
     },
     {
-      "file": "assets/LeaderboardPage-Cl52QC92.js",
-      "name": "LeaderboardPage-Cl52QC92.js",
+      "file": "dist\\assets\\index-B2kX7-Mt.js",
+      "name": "index-B2kX7-Mt.js",
+      "category": "main",
+      "raw": 8775,
+      "gzip": 3298,
+      "brotli": 2899
+    },
+    {
+      "file": "dist\\assets\\LeaderboardPage-ChnFgQdV.js",
+      "name": "LeaderboardPage-ChnFgQdV.js",
       "category": "other",
       "raw": 7561,
       "gzip": 2667,
-      "brotli": 2385
+      "brotli": 2389
     },
     {
-      "file": "assets/ShareButton-VoBcmQXL.js",
-      "name": "ShareButton-VoBcmQXL.js",
+      "file": "dist\\assets\\ShareButton-4xv_EmqR.js",
+      "name": "ShareButton-4xv_EmqR.js",
       "category": "other",
       "raw": 6526,
-      "gzip": 2457,
-      "brotli": 2055
+      "gzip": 2455,
+      "brotli": 2062
     },
     {
-      "file": "assets/index-CIGqTk4k.js",
-      "name": "index-CIGqTk4k.js",
-      "category": "main",
-      "raw": 6078,
-      "gzip": 2376,
-      "brotli": 2065
-    },
-    {
-      "file": "assets/Inventory-CrFSxGPl.js",
-      "name": "Inventory-CrFSxGPl.js",
+      "file": "dist\\assets\\Inventory-9v4M9UcU.js",
+      "name": "Inventory-9v4M9UcU.js",
       "category": "other",
       "raw": 5662,
-      "gzip": 2275,
-      "brotli": 1982
+      "gzip": 2274,
+      "brotli": 1988
     },
     {
-      "file": "sw.js",
+      "file": "dist\\sw.js",
       "name": "sw.js",
       "category": "other",
       "raw": 3435,
       "gzip": 1437,
-      "brotli": 1257
+      "brotli": 1261
     },
     {
-      "file": "assets/Home-V29OYddK.js",
-      "name": "Home-V29OYddK.js",
+      "file": "dist\\assets\\Home-CoO-qCXa.js",
+      "name": "Home-CoO-qCXa.js",
       "category": "other",
       "raw": 2875,
-      "gzip": 1212,
+      "gzip": 1214,
       "brotli": 1033
     },
     {
-      "file": "assets/EmptyStates-Balh6V7c.js",
-      "name": "EmptyStates-Balh6V7c.js",
+      "file": "dist\\assets\\EmptyStates-BUBy6rIE.js",
+      "name": "EmptyStates-BUBy6rIE.js",
       "category": "other",
       "raw": 2457,
-      "gzip": 1043,
-      "brotli": 872
+      "gzip": 1045,
+      "brotli": 895
     },
     {
-      "file": "assets/virtual_pwa-register-CZyZQnNX.js",
-      "name": "virtual_pwa-register-CZyZQnNX.js",
+      "file": "dist\\assets\\virtual_pwa-register-CqVO9iQo.js",
+      "name": "virtual_pwa-register-CqVO9iQo.js",
       "category": "other",
       "raw": 1321,
-      "gzip": 708,
-      "brotli": 618
+      "gzip": 713,
+      "brotli": 615
     },
     {
-      "file": "assets/NotFound-C6Ye_vwt.js",
-      "name": "NotFound-C6Ye_vwt.js",
+      "file": "dist\\assets\\NotFound-Dxw3Sx3K.js",
+      "name": "NotFound-Dxw3Sx3K.js",
       "category": "other",
       "raw": 576,
-      "gzip": 361,
-      "brotli": 297
+      "gzip": 362,
+      "brotli": 296
     }
   ],
   "visualization": {

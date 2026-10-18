@@ -361,7 +361,10 @@ export function trackWebVital(metric: WebVitalMetric): void {
       })
     }
   } catch (error) {
-    log.debug('Failed to record web vital', { error, metric: metric.name })
+    log.debug('Failed to record web vital', {
+      error: error instanceof Error ? error.message : String(error),
+      metric: metric.name,
+    })
   }
 }
 

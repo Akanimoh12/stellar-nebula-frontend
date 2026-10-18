@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -34,7 +37,10 @@
     "audit:ci": "node scripts/audit-check.mjs",
     "sri:generate": "node scripts/generate-sri.mjs",
     "sri:update": "node scripts/generate-sri.mjs --update",
-    "sri:check": "node scripts/generate-sri.mjs --check"
+    "sri:check": "node scripts/generate-sri.mjs --check",
+    "unused-exports:check": "node scripts/check-unused-exports.mjs",
+    "unused-exports:update-baseline": "node scripts/check-unused-exports.mjs --update-baseline",
+    "images:check": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
     "@albedo-link/intent": "^0.13.0",

@@ -1,5 +1,6 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
@@ -19,9 +20,26 @@ const STELLAR_SDK_DEPENDENCIES = [
   'uint8array-extras',
 ]
 
+/**
+ * Inlines src/styles/critical.css into index.html so first paint does not wait
+ * for the bundled stylesheet.
+ */
+function inlineCriticalCss(): Plugin {
+  return {
+    name: 'inline-critical-css',
+    transformIndexHtml() {
+      const css = readFileSync(resolve(__dirname, 'src/styles/critical.css'), 'utf8')
+      return [
+        { tag: 'style', attrs: { 'data-critical': '' }, children: css, injectTo: 'head-prepend' },
+      ]
+    },
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
+    inlineCriticalCss(),
     visualizer({ filename: 'stats.html', gzipSize: true, brotliSize: true, template: 'treemap' }),
     visualizer({
       filename: 'stats.json',
@@ -63,10 +81,22 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,webp,avif}'],
         // Cache versioning for proper updates (#259)
+        cacheId: 'stellar-nebula',
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         runtimeCaching: [
+          // Hashed build output never changes for a given URL, so cache it indefinitely
+          {
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/assets/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'build-assets-cache',
+              cacheableResponse: {
+                statuses: [200],
+              },
+            },
+          },
           // Cache-first for static assets (#259)
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|avif)$/i,
@@ -96,7 +126,7 @@ export default defineConfig({
           },
           // Network-first for API calls (#259)
           {
-            urlPattern: /^https:\/\/horizon-futurenet\.stellar\.org\/.*/i,
+            urlPattern: /^https:\/\/[^/]+\.stellar\.org\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'stellar-api-cache',
@@ -112,7 +142,7 @@ export default defineConfig({
           },
           // Cache-first for external fonts
           {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'google-fonts-cache',

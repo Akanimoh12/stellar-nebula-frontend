@@ -54,6 +54,10 @@ jobs:
           set -o pipefail
           npx tsc -b --noEmit --pretty false 2>&1 | tee typecheck-report.txt
 
+      - name: Check for new unused exports
+        if: ${{ !cancelled() }}
+        run: npm run unused-exports:check
+
       - name: Comment lint and type-check results on PR
         if: ${{ github.event_name == 'pull_request' && !cancelled() }}
         # Fork PRs get a read-only token; the annotations above still apply there.
@@ -182,6 +186,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check image budget
+        run: npm run images:check
 
       # Same steps as `npm run build`, split so a failure names the stage that broke.
       - name: Type check (tsc -b)

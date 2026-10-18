@@ -40,7 +40,13 @@
     "sri:check": "node scripts/generate-sri.mjs --check",
     "unused-exports:check": "node scripts/check-unused-exports.mjs",
     "unused-exports:update-baseline": "node scripts/check-unused-exports.mjs --update-baseline",
-    "images:check": "node scripts/optimize-images.mjs"
+    "images:check": "node scripts/optimize-images.mjs",
+    "check-duplicates": "node scripts/check-duplicates.mjs"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom",
+    "three": "0.170.0"
   },
   "dependencies": {
     "@albedo-link/intent": "^0.13.0",
@@ -61,6 +67,7 @@
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^6.30.1",
+    "three": "0.170.0",
     "vite-plugin-pwa": "^1.3.0",
     "workbox-window": "^7.4.1"
   },

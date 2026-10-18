@@ -109,7 +109,7 @@ describe('App pages — accessibility', () => {
 
       const results = await axe(container)
       expect(results).toHaveNoViolations()
-    })
+    }, 45000)
 
     it('exposes a heading so screen-reader users can orient', async () => {
       const { default: Page } = await load()

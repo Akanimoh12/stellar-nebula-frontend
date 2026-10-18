@@ -1,6 +1,6 @@
 import type { ImgHTMLAttributes } from 'react'
 
-type ImageVariant = 'informative' | 'decorative'
+export type ImageVariant = 'informative' | 'decorative'
 
 interface BaseImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'alt' | 'aria-hidden'> {
   src: string

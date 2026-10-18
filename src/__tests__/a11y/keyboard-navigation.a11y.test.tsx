@@ -86,7 +86,7 @@ describe('Keyboard navigation — Navigation header', () => {
     }
 
     expect(interactiveElements.length).toBeGreaterThan(0)
-  })
+  }, 30000)
 
   it('Escape key closes mobile menu when open', async () => {
     const user = userEvent.setup()

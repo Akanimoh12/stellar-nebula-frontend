@@ -28,7 +28,7 @@ function AppLayout() {
       <OnboardingWelcome />
       <TutorialFlow />
       <Navigation />
-      <main className="app-main">
+      <main id="main-content" className="app-main">
         <Outlet />
       </main>
       <Footer />

@@ -57,8 +57,8 @@ export function TransactionRecoveryPanel<TPayload>({
         </div>
       )}
 
-      {canRollback && (
-        <div className="transaction-recovery-actions">
+      <div className="transaction-recovery-actions">
+        {canRollback && (
           <button
             type="button"
             onClick={recovery.rollback}
@@ -67,18 +67,18 @@ export function TransactionRecoveryPanel<TPayload>({
           >
             Roll back and free the cooldown
           </button>
-          {!showRetry && (
-            <button
-              type="button"
-              onClick={recovery.dismiss}
-              disabled={recovery.isRetrying}
-              aria-label="Dismiss the transaction error"
-            >
-              Dismiss
-            </button>
-          )}
-        </div>
-      )}
+        )}
+        {!showRetry && (
+          <button
+            type="button"
+            onClick={recovery.dismiss}
+            disabled={recovery.isRetrying}
+            aria-label="Dismiss the transaction error"
+          >
+            Dismiss
+          </button>
+        )}
+      </div>
     </section>
   )
 }

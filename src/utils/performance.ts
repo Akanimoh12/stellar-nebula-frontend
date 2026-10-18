@@ -22,10 +22,7 @@ export function isTabVisible(): boolean {
  * @param onHidden Callback when document becomes hidden
  * @returns Cleanup function to remove the listener
  */
-export function onVisibilityChange(
-  onVisible?: () => void,
-  onHidden?: () => void
-): () => void {
+export function onVisibilityChange(onVisible?: () => void, onHidden?: () => void): () => void {
   if (typeof document === 'undefined') {
     return () => {}
   }
@@ -44,20 +41,30 @@ export function onVisibilityChange(
   }
 }
 
-/**
- * Returns battery status API if supported by the browser.
- */
-export async function getBatteryStatus(): Promise<{
+interface BatteryManager {
   charging?: boolean
   level?: number
   chargingTime?: number
   dischargingTime?: number
-} | null> {
-  if (typeof navigator === 'undefined' || !('getBattery' in navigator)) {
+}
+
+interface NavigatorWithBattery extends Navigator {
+  getBattery?: () => Promise<BatteryManager>
+}
+
+/**
+ * Returns battery status API if supported by the browser.
+ */
+export async function getBatteryStatus(): Promise<BatteryManager | null> {
+  if (typeof navigator === 'undefined') {
+    return null
+  }
+  const nav = navigator as NavigatorWithBattery
+  if (typeof nav.getBattery !== 'function') {
     return null
   }
   try {
-    const battery = await (navigator as any).getBattery()
+    const battery = await nav.getBattery()
     return {
       charging: battery.charging,
       level: battery.level,

@@ -50,7 +50,7 @@ describe('Modal focus management', () => {
     await user.click(screen.getByRole('button', { name: 'Open dialog' }))
 
     // The first focusable control inside the panel, not the trigger that opened it.
-    expect(screen.getByRole('button', { name: 'First action' })).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Close dialog' })).toHaveFocus()
   })
 
   it('restores focus to the trigger when the dialog closes', async () => {
@@ -59,7 +59,7 @@ describe('Modal focus management', () => {
 
     const trigger = screen.getByRole('button', { name: 'Open dialog' })
     await user.click(trigger)
-    expect(screen.getByRole('button', { name: 'First action' })).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Close dialog' })).toHaveFocus()
 
     await user.keyboard('{Escape}')
 
@@ -75,11 +75,11 @@ describe('Modal focus management', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }))
 
-    // The close button, then the two actions, then back to the first.
+    // Moving focus forward from the initial close button through the actions, then wrapping.
     const inDialog = [
-      screen.getByRole('button', { name: 'Close dialog' }),
       screen.getByRole('button', { name: 'First action' }),
       screen.getByRole('button', { name: 'Second action' }),
+      screen.getByRole('button', { name: 'Close dialog' }),
     ]
 
     for (const expected of inDialog) {

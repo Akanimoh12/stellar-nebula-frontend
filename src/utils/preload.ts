@@ -43,7 +43,7 @@ export function preloadAsset(
   }
 
   if (options.importance) {
-    ;(link as any).importance = options.importance
+    ;(link as HTMLLinkElement & { importance?: string }).importance = options.importance
   }
 
   document.head.appendChild(link)
@@ -86,7 +86,7 @@ export async function preloadFont(
     const font = new FontFace(family, `url(${sourceUrl})`, descriptors)
     await font.load()
     document.fonts.add(font)
-  } catch (err) {
+  } catch (_err) {
     // Graceful fallback to browser standard discovery
     preloadAsset(sourceUrl, 'font', { crossOrigin: 'anonymous' })
   }
@@ -96,9 +96,7 @@ export async function preloadFont(
  * Critical assets required across primary routes.
  */
 export const CRITICAL_ASSETS = {
-  fonts: [
-    'https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2',
-  ],
+  fonts: ['https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2'],
   images: ['/icon-192.png', '/vite.svg'],
 }
 
@@ -129,8 +127,12 @@ export function preloadCriticalAssets(): void {
     }
   }
 
-  if ('requestIdleCallback' in window) {
-    ;(window as any).requestIdleCallback(executePreload, { timeout: 2000 })
+  const win = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+  }
+
+  if (typeof win.requestIdleCallback === 'function') {
+    win.requestIdleCallback(executePreload, { timeout: 2000 })
   } else {
     setTimeout(executePreload, 1)
   }

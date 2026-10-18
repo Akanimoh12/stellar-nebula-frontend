@@ -24,13 +24,16 @@ function Navigation() {
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
+      <a href="#navigation" className="skip-link">
+        Skip to navigation
+      </a>
       <header className="site-header">
         <NavLink to="/" className="brand" aria-label="Stellar Nebula home">
           <span className="brand-mark" aria-hidden="true" />
           <span>Stellar Nebula</span>
         </NavLink>
 
-        <nav className="main-nav" aria-label="Primary navigation">
+        <nav id="navigation" className="main-nav" aria-label="Primary navigation">
           {navigationItems.map((item) => (
             <NavLink
               key={item.to}

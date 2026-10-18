@@ -36,3 +36,11 @@ export { useAnimationFrame, usePageVisibility } from './useAnimationFrame'
 export type { FrameInfo, UseAnimationFrameOptions } from './useAnimationFrame'
 export { useWebVitals, initWebVitalsMonitoring } from './useWebVitals'
 export type { WebVitalRating, WebVitalsState } from './useWebVitals'
+export {
+  useLanguage,
+  detectBrowserLanguage,
+  SUPPORTED_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  LANGUAGE_STORAGE_KEY,
+} from './useLanguage'
+export type { SupportedLanguageCode, UseLanguageReturn } from './useLanguage'

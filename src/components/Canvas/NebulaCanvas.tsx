@@ -32,7 +32,7 @@ function CanvasResourceCleanup() {
   return null
 }
 
-interface NebulaCanvasProps {
+export interface NebulaCanvasProps {
   showFps?: boolean
   onScanComplete?: (resourceType: ResourceType, amount: number, pointId: string) => void
 }

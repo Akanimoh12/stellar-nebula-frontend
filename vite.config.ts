@@ -34,6 +34,8 @@ function inlineCriticalCss(): Plugin {
       ]
     },
   }
+}
+
 /**
  * Injects preload hints for critical resources to optimize LCP and CLS (#379).
  */

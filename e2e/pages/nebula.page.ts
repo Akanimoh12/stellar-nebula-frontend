@@ -50,9 +50,10 @@ export class NebulaPage {
 
   async getVisibleAction(): Promise<'connect' | 'scan' | 'none'> {
     // Wait for either divergent state to resolve instead of racing raw waits.
-    const winner = await waitForAnyVisible([this.connectPrompt, this.scanButton], 8000).catch(
-      () => -1
-    )
+    const winner = await waitForAnyVisible(
+      [this.connectPrompt, this.scanButton],
+      WAIT_TIMEOUTS.standard
+    ).catch(() => -1)
     if (winner === 0) return 'connect'
     if (winner === 1) return 'scan'
     if (await this.connectPrompt.isVisible().catch(() => false)) return 'connect'

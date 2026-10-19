@@ -88,7 +88,7 @@ export class AppPage {
     return errors
   }
 
-  async waitForMainVisible(timeout = 10000) {
+  async waitForMainVisible(timeout = WAIT_TIMEOUTS.standard) {
     await this.main.waitFor({ state: 'visible', timeout })
   }
 }

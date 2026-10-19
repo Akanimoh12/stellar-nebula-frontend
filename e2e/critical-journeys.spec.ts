@@ -29,7 +29,7 @@ walletTest.describe('Critical Path: Wallet → Scan Nebula → Upgrade Ship → 
     // arbitrary sleep is needed — just assert a stable post-connect state.
     if (await wallet.connectButton.isVisible().catch(() => false)) {
       await wallet.connectWithFreighter()
-      await expect(wallet.dialog).not.toBeVisible({ timeout: 15_000 }).catch(() => {})
+      await expect(wallet.dialog).not.toBeVisible({ timeout: WAIT_TIMEOUTS.slow }).catch(() => {})
     }
 
     // 3) Scan Nebula
@@ -62,7 +62,7 @@ walletTest.describe('Critical Path: Wallet → Scan Nebula → Upgrade Ship → 
       // banner appears or the modal settles (closes or stays open).
       await expect(
         ship.transactionBanner.or(ship.upgradeModal)
-      ).toBeVisible({ timeout: 15_000 })
+      ).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
     } else {
       await ship.closeUpgradeModal()
     }

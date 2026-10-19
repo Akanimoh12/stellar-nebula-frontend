@@ -76,7 +76,7 @@ export class ShipPage {
 
   async selectShipByIndex(index = 0) {
     const card = this.shipCards.nth(index)
-    await card.waitFor({ state: 'visible' })
+    await card.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
     const name = await card.locator('.ship-name').textContent()
     await card.click()
     return name
@@ -99,7 +99,9 @@ export class ShipPage {
     } else {
       await this.page.keyboard.press('Escape')
     }
-    await this.upgradeModal.waitFor({ state: 'hidden' }).catch(() => {})
+    await this.upgradeModal
+      .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.standard })
+      .catch(() => {})
   }
 
   async selectUpgrade(upgradeName: 'cargo' | 'crew' | 'deep') {

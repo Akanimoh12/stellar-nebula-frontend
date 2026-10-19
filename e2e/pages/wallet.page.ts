@@ -48,7 +48,9 @@ export class WalletPage {
     } else {
       await this.page.keyboard.press('Escape')
     }
-    await this.dialog.waitFor({ state: 'hidden' }).catch(() => {})
+    await this.dialog
+      .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.standard })
+      .catch(() => {})
   }
 
   async selectFreighter() {

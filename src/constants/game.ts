@@ -76,3 +76,8 @@ export const RARITY_MULTIPLIERS = {
   rare: 2,
   legendary: 5,
 } as const
+
+// ─── Upgrades ────────────────────────────────────────────────────────────────
+
+/** Simulated confirmation delay for an off-chain ship upgrade (milliseconds) */
+export const UPGRADE_CONFIRMATION_DELAY_MS = 700

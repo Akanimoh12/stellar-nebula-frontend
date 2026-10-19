@@ -14,6 +14,12 @@ export const STELLAR_TESTNET_RPC_URL = 'https://soroban-testnet.stellar.org'
 /** Stellar mainnet RPC URL */
 export const STELLAR_MAINNET_RPC_URL = 'https://soroban.stellar.org'
 
+/** Stellar futurenet Horizon URL */
+export const STELLAR_FUTURENET_HORIZON_URL = 'https://horizon-futurenet.stellar.org'
+
+/** Stellar futurenet RPC URL */
+export const STELLAR_FUTURENET_RPC_URL = 'https://rpc-futurenet.stellar.org'
+
 /** Testnet network passphrase */
 export const STELLAR_TESTNET_PASSPHRASE = 'Test SDF Network ; September 2015'
 

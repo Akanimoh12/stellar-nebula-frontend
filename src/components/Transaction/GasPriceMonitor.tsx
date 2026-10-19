@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getActiveStellarConfig } from '@/config/stellar'
+import { GAS_PRICE_POLL_INTERVAL_MS } from '@/constants/app'
 import { startGasPriceMonitor, type GasPriceSnapshot } from '@services/stellar'
 
 interface GasPriceMonitorProps {
@@ -22,7 +23,7 @@ export function GasPriceMonitor({ config }: GasPriceMonitorProps) {
 
     const stop = startGasPriceMonitor({
       config: resolvedConfig,
-      pollIntervalMs: 30_000,
+      pollIntervalMs: GAS_PRICE_POLL_INTERVAL_MS,
       onUpdate: (next) => {
         if (!cancelled) {
           setSnapshot(next)

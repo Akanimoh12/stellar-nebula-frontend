@@ -1,4 +1,6 @@
 /* eslint-disable */
+import { DATA_SYNC_DEFAULT_INTERVAL_MS } from '@/constants/app'
+
 export interface SyncOptions<T = any> {
   intervalMs?: number
   fetcher: () => Promise<T>
@@ -28,7 +30,7 @@ export class DataSync<T = any> {
   private isSyncing = false
 
   constructor(opts: SyncOptions<T>) {
-    this.opts = { intervalMs: 30000, ...opts }
+    this.opts = { intervalMs: DATA_SYNC_DEFAULT_INTERVAL_MS, ...opts }
   }
 
   /** Start the periodic sync loop. */

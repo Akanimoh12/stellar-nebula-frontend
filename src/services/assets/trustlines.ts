@@ -1,6 +1,7 @@
 import { Asset, BASE_FEE, Operation, TransactionBuilder } from '@stellar/stellar-sdk'
 import { createHorizonServer, getActiveStellarConfig } from '@/config/stellar'
 import type { StellarNetworkConfig } from '@/config/stellar'
+import { STELLAR_TX_TIMEOUT_SECONDS } from '@/constants/stellar'
 
 export interface TrustlineAsset {
   code: string
@@ -133,7 +134,7 @@ export async function buildTrustlineTransaction(
         limit,
       })
     )
-    .setTimeout(30)
+    .setTimeout(STELLAR_TX_TIMEOUT_SECONDS)
     .build()
 
   return {

@@ -56,8 +56,23 @@ export default defineConfig([
         },
       ],
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // Application code logs through `logger` (src/services/logging.ts). Direct console
+      // calls are errors, except warn/error which the logger itself may emit.
+      'no-console': ['error', { allow: ['warn', 'error'] }],
       'jsx-a11y/heading-has-content': 'error',
+    },
+  },
+  {
+    // The logger is the one place that wraps console, and tests may inspect it directly.
+    files: [
+      'src/services/logging.ts',
+      '**/__tests__/**',
+      '**/*.test.{ts,tsx}',
+      'test/**',
+      'e2e/**',
+    ],
+    rules: {
+      'no-console': 'off',
     },
   },
   ...storybook.configs['flat/recommended'],

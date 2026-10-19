@@ -61,6 +61,11 @@ function generatePreloadHints(): Plugin {
 }
 
 export default defineConfig({
+  esbuild: {
+    // Production bundles drop debug-level console output. console.warn/error are kept so
+    // real failures still reach the browser console and error reporting.
+    pure: ['console.log', 'console.debug', 'console.info'],
+  },
   plugins: [
     react(),
     inlineCriticalCss(),

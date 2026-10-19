@@ -1,4 +1,5 @@
 import { env } from '../config'
+import { API_RETRY_BASE_DELAY_MS } from '@/constants/app'
 import { createScopedLogger } from './logging'
 import { addMonitoringBreadcrumb } from './monitoring'
 import { applyCsrfHeaders, generateCsrfToken, getCsrfToken } from '../utils/csrf'
@@ -92,7 +93,7 @@ async function executeFetch(
   signal: AbortSignal
 ): Promise<Response> {
   let lastError: Error | null = null
-  let delay = 1000
+  let delay = API_RETRY_BASE_DELAY_MS
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (attempt > 0) {

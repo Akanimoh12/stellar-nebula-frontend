@@ -9,6 +9,7 @@ import {
 import type { StellarNetworkConfig } from '@config/stellar'
 import { getActiveStellarConfig } from '@config/stellar'
 import { env } from '@config/env'
+import { STELLAR_TX_TIMEOUT_SECONDS } from '@constants/stellar'
 import type { ResourceAssetBalance } from '@services/assets/resources'
 import type { ShipNFTRecord } from '@services/nft/shipNFT'
 import { simulateContractTransaction } from '@utils/stellar/simulate'
@@ -240,7 +241,7 @@ export async function buildShipUpgradeTransaction(params: {
         args: [xdr.ScVal.scvString(JSON.stringify(payload))],
       })
     )
-    .setTimeout(30)
+    .setTimeout(STELLAR_TX_TIMEOUT_SECONDS)
     .setNetworkPassphrase(networkPassphrase)
     .build()
 

@@ -2,6 +2,7 @@ import { Contract, TransactionBuilder, BASE_FEE, type xdr } from '@stellar/stell
 import { createStellarRpcServer, getActiveStellarConfig } from '@/config/stellar'
 import type { StellarNetworkConfig } from '@/config/stellar'
 import { createScopedLogger } from '@/services/logging'
+import { STELLAR_TX_TIMEOUT_SECONDS } from '@/constants/stellar'
 
 const log = createScopedLogger('GasEstimation')
 
@@ -200,7 +201,7 @@ async function detectFeeTrend(
  *
  * @example
  * const estimate = await estimateGas(1)
- * console.log(`Fee: ${estimate.feeXlm} XLM`)
+ * const feeLabel = `Fee: ${estimate.feeXlm} XLM`
  * if (estimate.highFeeWarning) {
  *   showToast(estimate.summary)
  * }
@@ -278,7 +279,7 @@ export async function estimateSorobanGas(
       networkPassphrase: config.networkPassphrase,
     })
       .addOperation(contract.call(methodName, ...params))
-      .setTimeout(30)
+      .setTimeout(STELLAR_TX_TIMEOUT_SECONDS)
       .build()
 
     const simulation = await server.simulateTransaction(tx)

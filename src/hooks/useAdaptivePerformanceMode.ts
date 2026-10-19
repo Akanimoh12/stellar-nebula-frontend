@@ -1,8 +1,8 @@
 import { useRef } from 'react'
 import { useFrameRateMonitor } from './useFrameRateMonitor'
 import { useGraphicsStore } from '@/store/graphicsStore'
+import { PERFORMANCE_LOW_FPS_THRESHOLD } from '@/constants/app'
 
-const LOW_FPS_THRESHOLD = 30
 const CONSECUTIVE_LOW_SAMPLES_TO_TRIGGER = 3
 
 /**
@@ -22,10 +22,10 @@ export function useAdaptivePerformanceMode() {
 
   useFrameRateMonitor({
     enabled: !performanceMode,
-    targetFps: LOW_FPS_THRESHOLD,
+    targetFps: PERFORMANCE_LOW_FPS_THRESHOLD,
     sampleWindowMs: 1000,
     onSample: (sample) => {
-      if (sample.averageFps > 0 && sample.averageFps < LOW_FPS_THRESHOLD) {
+      if (sample.averageFps > 0 && sample.averageFps < PERFORMANCE_LOW_FPS_THRESHOLD) {
         lowFpsStreakRef.current += 1
       } else {
         lowFpsStreakRef.current = 0

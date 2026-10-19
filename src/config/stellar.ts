@@ -1,4 +1,14 @@
 import type { Horizon, rpc } from '@stellar/stellar-sdk'
+import {
+  STELLAR_FUTURENET_HORIZON_URL,
+  STELLAR_FUTURENET_PASSPHRASE,
+  STELLAR_FUTURENET_RPC_URL,
+  STELLAR_MAINNET_HORIZON_URL,
+  STELLAR_MAINNET_PASSPHRASE,
+  STELLAR_TESTNET_HORIZON_URL,
+  STELLAR_TESTNET_PASSPHRASE,
+  STELLAR_TESTNET_RPC_URL,
+} from '@/constants/stellar'
 
 export type StellarNetwork = 'testnet' | 'futurenet' | 'mainnet'
 
@@ -68,35 +78,31 @@ function readContractId(network: StellarNetwork, kind: 'nebula' | 'token'): stri
 
 // Network passphrases hard-coded to avoid statically importing @stellar/stellar-sdk
 // in the initial bundle. Values mirror the `Networks` enum from the SDK.
-const NETWORK_PASSPHRASES = {
-  TESTNET: 'Test SDF Network ; September 2015',
-  FUTURENET: 'Test SDF Future Network ; October 2022',
-  PUBLIC: 'Public Global Stellar Network ; September 2015',
-} as const
-
 /** Preconfigured Stellar network definitions. */
 export const STELLAR_NETWORK_CONFIGS: Record<StellarNetwork, StellarNetworkConfig> = {
   testnet: {
     network: 'testnet',
-    rpcUrl: 'https://soroban-testnet.stellar.org',
-    horizonUrl: 'https://horizon-testnet.stellar.org',
-    networkPassphrase: NETWORK_PASSPHRASES.TESTNET,
+    rpcUrl: STELLAR_TESTNET_RPC_URL,
+    horizonUrl: STELLAR_TESTNET_HORIZON_URL,
+    networkPassphrase: STELLAR_TESTNET_PASSPHRASE,
     nebulaContractId: readContractId('testnet', 'nebula'),
     tokenContractId: readContractId('testnet', 'token'),
   },
   futurenet: {
     network: 'futurenet',
-    rpcUrl: 'https://rpc-futurenet.stellar.org',
-    horizonUrl: 'https://horizon-futurenet.stellar.org',
-    networkPassphrase: NETWORK_PASSPHRASES.FUTURENET,
+    rpcUrl: STELLAR_FUTURENET_RPC_URL,
+    horizonUrl: STELLAR_FUTURENET_HORIZON_URL,
+    networkPassphrase: STELLAR_FUTURENET_PASSPHRASE,
     nebulaContractId: readContractId('futurenet', 'nebula'),
     tokenContractId: readContractId('futurenet', 'token'),
   },
   mainnet: {
     network: 'mainnet',
+    // NOTE: intentionally not STELLAR_MAINNET_RPC_URL (`soroban.stellar.org`); the two
+    // constants disagree, so confirm which mainnet RPC is intended before unifying them.
     rpcUrl: 'https://soroban-rpc.stellar.org',
-    horizonUrl: 'https://horizon.stellar.org',
-    networkPassphrase: NETWORK_PASSPHRASES.PUBLIC,
+    horizonUrl: STELLAR_MAINNET_HORIZON_URL,
+    networkPassphrase: STELLAR_MAINNET_PASSPHRASE,
     nebulaContractId: readContractId('mainnet', 'nebula'),
     tokenContractId: readContractId('mainnet', 'token'),
   },
@@ -164,7 +170,7 @@ export async function createHorizonServer(
  *
  * @example
  * const status = await checkStellarConnection()
- * console.log(status.rpcHealthy, status.horizonConnected)
+ * // status.rpcHealthy, status.horizonConnected
  */
 export async function checkStellarConnection(
   config: StellarNetworkConfig = getActiveStellarConfig(),

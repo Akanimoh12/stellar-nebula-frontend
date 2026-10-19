@@ -30,6 +30,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          # Full history so the format check can diff against the PR base branch.
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v7
@@ -39,6 +42,21 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Prettier is enforced on files the PR touches. Whole-repo formatting drift is
+      # handled separately (`npm run format`), so unrelated files do not fail this job.
+      - name: Check formatting of changed files
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          files=$(git diff --name-only --diff-filter=ACMR "origin/$BASE_REF...HEAD" \
+            | grep -E '\.(ts|tsx|js|jsx|json|css|md)$' || true)
+          if [ -z "$files" ]; then
+            echo "No changed files need formatting checks."
+            exit 0
+          fi
+          npx prettier --check $files
 
       # `stylish` output and `--pretty false` match the eslint/tsc problem matchers that
       # setup-node registers, so failures show up as inline annotations on the diff.

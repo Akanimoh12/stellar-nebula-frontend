@@ -61,7 +61,10 @@ npm run build
 
 ## Coding Style
 
-- We use ESLint and Prettier for code formatting.
+- We use ESLint and Prettier for code formatting. Prettier runs automatically on staged
+  files through the Husky pre-commit hook (`lint-staged`), and CI checks formatting of every
+  file a pull request changes. Settings live in `.prettierrc`; run `npm run format` to format
+  the whole repository.
 - TypeScript is required for all new code.
 - Follow the project's folder structure for components and hooks.
 

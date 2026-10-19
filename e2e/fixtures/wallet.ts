@@ -37,7 +37,13 @@ export const test = base.extend<WalletFixtures>({
 export { expect } from '@playwright/test'
 
 export async function connectWallet(page: Page) {
-  await page.getByRole('button', { name: /connect wallet/i }).click()
-  await page.getByRole('button', { name: /freighter/i }).click()
-  await page.waitForSelector('[data-testid="wallet-connected"]', { timeout: 10000 })
+  const connectButton = page.getByRole('button', { name: /connect wallet/i })
+  await connectButton.waitFor({ state: 'visible', timeout: 10_000 })
+  await connectButton.click()
+  const freighterButton = page.getByRole('button', { name: /freighter/i })
+  await freighterButton.waitFor({ state: 'visible', timeout: 10_000 })
+  await freighterButton.click()
+  await page
+    .locator('[data-testid="wallet-connected"]')
+    .waitFor({ state: 'visible', timeout: 15_000 })
 }

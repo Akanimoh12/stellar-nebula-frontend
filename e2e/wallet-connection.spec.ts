@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { test as walletTest } from './fixtures/wallet'
 import { WalletPage } from './pages/wallet.page'
 import { AppPage } from './pages/app.page'
+import { waitForCondition, waitForNetworkIdleSafe, WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 /**
  * End-to-end integration test suite for the wallet connection lifecycle (#342).
@@ -95,12 +96,14 @@ walletTest.describe('Wallet connection flow — mock provider connected state', 
     'completes connection lifecycle and updates session indicators',
     async ({ page, mockWalletInstalled: _ }) => {
       const wallet = new WalletPage(page)
-      await page.goto('/')
-      await page.waitForLoadState('networkidle')
+      await wallet.goto('/')
+      await waitForNetworkIdleSafe(page)
 
       if (await wallet.connectButton.isVisible()) {
         await wallet.connectWithFreighter()
-        await page.waitForTimeout(500)
+        await waitForCondition(() => wallet.isConnected(), {
+          timeout: WAIT_TIMEOUTS.slow,
+        }).catch(() => {})
         const isConnected = await wallet.isConnected()
         expect(
           isConnected || (await wallet.freighterButton.isVisible().catch(() => false)) || true

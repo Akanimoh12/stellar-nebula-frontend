@@ -1,4 +1,5 @@
 import type { Page, Locator } from '@playwright/test'
+import { gotoStable, waitForNetworkIdleSafe, WAIT_TIMEOUTS } from '../helpers/wait-helpers'
 
 export class ShipPage {
   readonly page: Page
@@ -50,12 +51,15 @@ export class ShipPage {
   }
 
   async goto() {
-    await this.page.goto('/dashboard')
-    await this.page.waitForLoadState('networkidle')
+    await gotoStable(this.page, '/dashboard')
   }
 
   async waitForReady() {
-    await this.page.getByRole('main').waitFor({ state: 'visible' })
+    await this.page
+      .getByRole('main')
+      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
+    await waitForNetworkIdleSafe(this.page)
+    await this.fleetSection.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.slow })
   }
 
   async getShipCount() {
@@ -84,9 +88,9 @@ export class ShipPage {
   }
 
   async openUpgradeBay() {
-    await this.openUpgradeBayButton.waitFor({ state: 'visible', timeout: 10000 })
+    await this.openUpgradeBayButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.slow })
     await this.openUpgradeBayButton.click()
-    await this.upgradeModal.waitFor({ state: 'visible', timeout: 10000 })
+    await this.upgradeModal.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.slow })
   }
 
   async closeUpgradeModal() {
@@ -105,7 +109,7 @@ export class ShipPage {
       deep: this.deepScanUpgradeButton,
     }
     const btn = map[upgradeName]
-    await btn.waitFor({ state: 'visible', timeout: 8000 })
+    await btn.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
     await btn.click()
   }
 

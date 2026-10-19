@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { NebulaPage } from './pages/nebula.page'
 import { AppPage } from './pages/app.page'
 import { test as walletTest } from './fixtures/wallet'
+import { WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 test.describe('Nebula scan page (POM)', () => {
   let nebula: NebulaPage
@@ -14,14 +15,14 @@ test.describe('Nebula scan page (POM)', () => {
 
   test('renders the nebula view', async ({ page }) => {
     await nebula.goto()
-    await expect(page.getByRole('main')).toBeVisible()
-    await expect(nebula.heading).toBeVisible()
+    await expect(page.getByRole('main')).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+    await expect(nebula.heading).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('shows nebula canvas element', async () => {
     await nebula.goto()
     await nebula.waitForCanvas()
-    await expect(nebula.canvas).toBeVisible()
+    await expect(nebula.canvas).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
   })
 
   test('shows connect prompt for unauthenticated scan', async () => {
@@ -35,8 +36,9 @@ test.describe('Nebula scan page (POM)', () => {
   test('navigates to nebula from nav link via AppPage POM', async ({ page }) => {
     await app.goto('/')
     await app.navigateTo('nebula')
-    await expect(page).toHaveURL(/\/nebula/)
-    await expect(nebula.canvas).toBeVisible({ timeout: 10000 })
+    await expect(page).toHaveURL(/\/nebula/, { timeout: WAIT_TIMEOUTS.standard })
+    await nebula.waitForCanvas()
+    await expect(nebula.canvas).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
   })
 
   test('canvas is keyboard and screen-reader accessible', async () => {
@@ -44,13 +46,13 @@ test.describe('Nebula scan page (POM)', () => {
     await nebula.waitForCanvas()
     // Canvas should be visible; if aria-label not set, ensure parent has label
     const main = nebula.page.getByRole('main')
-    await expect(main).toBeVisible()
+    await expect(main).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('inventory filters are accessible and functional', async () => {
     await nebula.goto()
     await nebula.waitForCanvas()
-    await expect(nebula.inventory).toBeVisible()
+    await expect(nebula.inventory).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
     // Filter buttons should have aria-label and aria-pressed
     if (await nebula.inventoryFilterAll.isVisible().catch(() => false)) {
       await expect(nebula.inventoryFilterAll).toHaveAttribute('aria-label', /filter resources/i)
@@ -63,17 +65,21 @@ test.describe('Nebula scan page (POM)', () => {
 
   test('harvest log and totals are visible', async () => {
     await nebula.goto()
-    await expect(nebula.harvestLog).toBeVisible()
-    await expect(nebula.inventory).toBeVisible()
+    await nebula.waitForPageReady()
+    await expect(nebula.harvestLog).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+    await expect(nebula.inventory).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
     // Totals grid may be empty before scans, but structure should exist
-    await expect(nebula.page.locator('.harvest-totals')).toBeVisible()
+    await expect(nebula.page.locator('.harvest-totals')).toBeVisible({
+      timeout: WAIT_TIMEOUTS.standard,
+    })
   })
 
   test('nebula page loads on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 })
     await nebula.goto()
-    await expect(page.getByRole('main')).toBeVisible()
-    await expect(nebula.canvas).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('main')).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+    await nebula.waitForCanvas()
+    await expect(nebula.canvas).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
   })
 })
 
@@ -86,13 +92,13 @@ walletTest.describe('Nebula scan — with wallet (POM)', () => {
       const nebula = new NebulaPage(page)
       await nebula.goto()
       await nebula.waitForCanvas()
-      await expect(nebula.canvas).toBeVisible()
+      await expect(nebula.canvas).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
 
       // Try scanning anomaly
       await nebula.scanAnomaly()
       // After scan, inventory or harvest log should still be visible
-      await expect(nebula.inventory).toBeVisible()
-      await expect(nebula.harvestLog).toBeVisible()
+      await expect(nebula.inventory).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+      await expect(nebula.harvestLog).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
     }
   )
 
@@ -105,7 +111,7 @@ walletTest.describe('Nebula scan — with wallet (POM)', () => {
 
       await nebula.scanAnomaly()
       // Totals may update optimistically; at least page remains stable
-      await expect(nebula.harvestLog).toBeVisible()
+      await expect(nebula.harvestLog).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
       // No error thrown
       const after = await nebula.getHarvestTotals().catch(() => ({}))
       expect(typeof after).toBe('object')

@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { ShipPage } from './pages/ship.page'
 import { AppPage } from './pages/app.page'
 import { test as walletTest } from './fixtures/wallet'
+import { WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 test.describe('Ship upgrade flow (POM)', () => {
   let ship: ShipPage
@@ -135,7 +136,7 @@ walletTest.describe('Ship upgrade — with wallet (POM)', () => {
       await ship.openUpgradeBay()
       // Select first upgrade
       const firstChoice = ship.upgradeChoices.first()
-      await firstChoice.waitFor({ state: 'visible' })
+      await firstChoice.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
       await firstChoice.click()
       // Check apply button state
       const apply = ship.page.getByRole('button', { name: /apply upgrade/i })
@@ -147,10 +148,11 @@ walletTest.describe('Ship upgrade — with wallet (POM)', () => {
           await apply.click()
           // Handle potential confirm modal
           await ship.handleConfirmModalIfVisible()
-          // Banner may appear
-          await expect(ship.transactionBanner.or(ship.upgradeModal))
-            .toBeVisible({ timeout: 5000 })
-            .catch(() => {})
+          // Banner appears on success; modal stays open on pending state.
+          // Either is a stable terminal state — wait explicitly, don't sleep.
+          await expect(ship.transactionBanner.or(ship.upgradeModal)).toBeVisible({
+            timeout: WAIT_TIMEOUTS.slow,
+          })
         }
       }
       await ship.closeUpgradeModal().catch(() => {})

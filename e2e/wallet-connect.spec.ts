@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { test as walletTest } from './fixtures/wallet'
 import { WalletPage } from './pages/wallet.page'
 import { AppPage } from './pages/app.page'
+import { waitForCondition, waitForNetworkIdleSafe, WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 // ─── POM-based comprehensive wallet flow ─────────────────────────────────────
 
@@ -88,15 +89,18 @@ walletTest.describe('Wallet connection — with mock Freighter (POM)', () => {
 
   walletTest('full connect flow via WalletPage POM', async ({ page, mockWalletInstalled: _ }) => {
     const wallet = new WalletPage(page)
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await wallet.goto('/')
+    await waitForNetworkIdleSafe(page)
 
     // Initiate connection
     if (await wallet.connectButton.isVisible()) {
       await wallet.connectWithFreighter()
-      // After connect, dialog should close and either connected indicator or disconnect appears
-      // Give app time to process mock wallet
-      await page.waitForTimeout(500)
+      // After connect, dialog should close and either connected indicator or
+      // disconnect appears. connectWithFreighter already waits for the
+      // dialog/indicator transition; poll the connected state explicitly.
+      await waitForCondition(() => wallet.isConnected(), {
+        timeout: WAIT_TIMEOUTS.slow,
+      }).catch(() => {})
       const connected = await wallet.isConnected()
       // In mock mode, we may not have full connected UI without additional app logic,
       // but at least Freighter button should have been clickable
@@ -109,7 +113,9 @@ walletTest.describe('Wallet connection — with mock Freighter (POM)', () => {
   walletTest(
     'wallet status indicator has dynamic aria-label',
     async ({ page, mockWalletInstalled: _ }) => {
-      await page.goto('/')
+      const wallet = new WalletPage(page)
+      await wallet.goto('/')
+      await waitForNetworkIdleSafe(page)
       // StatusIndicator is visible in header or via WalletPage
       const statusBtn = page.getByRole('button', { name: /wallet status/i })
       if (await statusBtn.isVisible().catch(() => false)) {

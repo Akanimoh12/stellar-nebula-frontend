@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { MarketplacePage } from './pages/marketplace.page'
 import { AppPage } from './pages/app.page'
+import { WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 test.describe('Marketplace — DEX trading flows', () => {
   let market: MarketplacePage
@@ -14,21 +15,25 @@ test.describe('Marketplace — DEX trading flows', () => {
   })
 
   test('renders marketplace and stellar exchange', async () => {
-    await expect(market.heading).toBeVisible()
-    await expect(market.exchangeHeading).toBeVisible()
-    await expect(market.dexContainer).toBeVisible()
+    await expect(market.heading).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+    await expect(market.exchangeHeading).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
+    await expect(market.dexContainer).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('shows chart placeholder and current price', async () => {
-    await expect(market.chartPlaceholder).toBeVisible()
+    await expect(market.chartPlaceholder).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
     const price = await market.getCurrentPrice()
     expect(price).toBeTruthy()
     expect(price).toMatch(/\d+\.\d+/)
   })
 
   test('displays order book and trade history after loading', async () => {
-    await expect.poll(async () => market.isOrderBookVisible(), { timeout: 8000 }).toBe(true)
-    await expect.poll(async () => market.isTradeHistoryVisible(), { timeout: 8000 }).toBe(true)
+    await expect
+      .poll(async () => market.isOrderBookVisible(), { timeout: WAIT_TIMEOUTS.slow })
+      .toBe(true)
+    await expect
+      .poll(async () => market.isTradeHistoryVisible(), { timeout: WAIT_TIMEOUTS.slow })
+      .toBe(true)
   })
 
   test('buy/sell toggle switches trade type (POM)', async () => {
@@ -79,19 +84,20 @@ test.describe('Marketplace — DEX trading flows', () => {
   test('asset selector switches market (DUST / CRYS / DARK)', async () => {
     const assets = await market.getAvailableAssets()
     expect(assets.length).toBeGreaterThanOrEqual(2)
-    // Try switching to each
+    // Try switching to each. selectAsset() waits for the market header to
+    // reflect the new asset, so this loop is deterministic with no sleeps.
     for (const code of assets.slice(0, 2)) {
       await market.selectAsset(code)
       const heading = market.page.getByText(new RegExp(`${code} / XLM`, 'i'))
-      await expect(heading.first()).toBeVisible({ timeout: 8000 })
+      await expect(heading.first()).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
     }
   })
 
   test('navigates to marketplace via AppPage POM', async ({ page }) => {
-    await page.goto('/')
+    await app.goto('/')
     await app.navigateTo('market')
-    await expect(page).toHaveURL(/\/marketplace/)
-    await expect(market.exchangeHeading).toBeVisible()
+    await expect(page).toHaveURL(/\/marketplace/, { timeout: WAIT_TIMEOUTS.standard })
+    await expect(market.exchangeHeading).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
   })
 
   test('trade form inputs have accessible labels (a11y)', async () => {
@@ -111,7 +117,7 @@ test.describe('Marketplace — DEX trading flows', () => {
     await page.setViewportSize({ width: 375, height: 667 })
     await market.goto()
     await market.waitForReady()
-    await expect(market.heading).toBeVisible()
-    await expect(market.exchangeHeading).toBeVisible()
+    await expect(market.heading).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+    await expect(market.exchangeHeading).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
   })
 })

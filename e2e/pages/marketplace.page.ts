@@ -1,4 +1,5 @@
-import type { Page, Locator } from '@playwright/test'
+import { expect, type Page, type Locator } from '@playwright/test'
+import { gotoStable, waitForNetworkIdleSafe, WAIT_TIMEOUTS } from '../helpers/wait-helpers'
 
 export class MarketplacePage {
   readonly page: Page
@@ -43,15 +44,27 @@ export class MarketplacePage {
   }
 
   async goto() {
-    await this.page.goto('/marketplace')
-    await this.page.waitForLoadState('networkidle')
+    await gotoStable(this.page, '/marketplace')
   }
 
   async waitForReady() {
-    await this.page.getByRole('main').waitFor({ state: 'visible' })
-    // Wait for DEX to load (spinner disappears)
-    await this.exchangeHeading.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
-    await this.page.waitForTimeout(800) // allow mock data to populate
+    await this.page
+      .getByRole('main')
+      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
+    // Wait for DEX to load (spinner disappears). Mock order-book data
+    // populates asynchronously, so observe the exchange heading + order book
+    // text instead of sleeping a fixed 800ms.
+    await this.exchangeHeading
+      .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.slow })
+      .catch(() => {})
+    await waitForNetworkIdleSafe(this.page)
+    await expect
+      .poll(async () => this.isOrderBookVisible(), {
+        timeout: WAIT_TIMEOUTS.slow,
+        intervals: [200],
+      })
+      .toBe(true)
+      .catch(() => {})
   }
 
   async getCurrentPrice(): Promise<string | null> {
@@ -139,15 +152,25 @@ export class MarketplacePage {
   }
 
   async getNotificationText(): Promise<string | null> {
-    if (await this.notification.isVisible({ timeout: 3000 }).catch(() => false)) {
-      return this.notification.textContent()
+    if (
+      await this.notification
+        .first()
+        .isVisible({ timeout: WAIT_TIMEOUTS.standard })
+        .catch(() => false)
+    ) {
+      return this.notification.first().textContent()
     }
     return null
   }
 
   async selectAsset(assetCode: string) {
+    await this.assetSelect.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
     await this.assetSelect.selectOption(assetCode)
-    await this.page.waitForTimeout(700) // wait for mock reload
+    // Wait for the market header to reflect the newly selected asset instead
+    // of sleeping for the mock reload.
+    const heading = this.page.getByText(new RegExp(`${assetCode} / XLM`, 'i'))
+    await heading.first().waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.slow })
+    await waitForNetworkIdleSafe(this.page)
   }
 
   async getAvailableAssets(): Promise<string[]> {

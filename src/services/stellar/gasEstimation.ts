@@ -201,7 +201,7 @@ async function detectFeeTrend(
  *
  * @example
  * const estimate = await estimateGas(1)
- * console.log(`Fee: ${estimate.feeXlm} XLM`)
+ * const feeLabel = `Fee: ${estimate.feeXlm} XLM`
  * if (estimate.highFeeWarning) {
  *   showToast(estimate.summary)
  * }

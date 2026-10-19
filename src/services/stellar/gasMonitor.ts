@@ -105,7 +105,7 @@ export function startGasPriceMonitor(options: GasMonitorOptions): () => void {
  *
  * @example
  * const monitor = createGasMonitor({
- *   onUpdate: (stats) => console.log('p95 fee:', stats.p95),
+ *   onUpdate: (stats) => setP95Fee(stats.p95),
  *   onError: (err) => console.error(err),
  * })
  * monitor.start()

@@ -170,7 +170,7 @@ export async function createHorizonServer(
  *
  * @example
  * const status = await checkStellarConnection()
- * console.log(status.rpcHealthy, status.horizonConnected)
+ * // status.rpcHealthy, status.horizonConnected
  */
 export async function checkStellarConnection(
   config: StellarNetworkConfig = getActiveStellarConfig(),

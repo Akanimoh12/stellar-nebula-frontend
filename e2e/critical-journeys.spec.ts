@@ -5,6 +5,7 @@ import { WalletPage } from './pages/wallet.page'
 import { NebulaPage } from './pages/nebula.page'
 import { ShipPage } from './pages/ship.page'
 import { MarketplacePage } from './pages/marketplace.page'
+import { gotoStable, WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 // ─── Critical user paths — full E2E journeys with POM ───────────────────────
 
@@ -23,10 +24,12 @@ walletTest.describe('Critical Path: Wallet → Scan Nebula → Upgrade Ship → 
     await expect(page.getByRole('main')).toBeVisible()
     await expect(page).toHaveTitle(/stellar nebula/i)
 
-    // 2) Connect wallet (if button visible)
+    // 2) Connect wallet (if button visible). connectWithFreighter already
+    // waits for the dialog to dismiss / connected indicator to appear, so no
+    // arbitrary sleep is needed — just assert a stable post-connect state.
     if (await wallet.connectButton.isVisible().catch(() => false)) {
       await wallet.connectWithFreighter()
-      await page.waitForTimeout(600)
+      await expect(wallet.dialog).not.toBeVisible({ timeout: WAIT_TIMEOUTS.slow }).catch(() => {})
     }
 
     // 3) Scan Nebula
@@ -55,8 +58,11 @@ walletTest.describe('Critical Path: Wallet → Scan Nebula → Upgrade Ship → 
     if (canApply) {
       await ship.applyUpgrade()
       await ship.handleConfirmModalIfVisible()
-      // Wait for any banner or modal update
-      await page.waitForTimeout(800)
+      // Wait for a deterministic post-apply state: either a transaction
+      // banner appears or the modal settles (closes or stays open).
+      await expect(
+        ship.transactionBanner.or(ship.upgradeModal)
+      ).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
     } else {
       await ship.closeUpgradeModal()
     }
@@ -94,7 +100,7 @@ walletTest.describe('Critical Path: Wallet → Scan Nebula → Upgrade Ship → 
       }
       for (const route of ['nebula', 'ship', 'market'] as const) {
         await app.navigateTo(route)
-        await expect(page.getByRole('main')).toBeVisible()
+        await expect(page.getByRole('main')).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
         // No console errors on navigation
       }
     }
@@ -104,10 +110,12 @@ walletTest.describe('Critical Path: Wallet → Scan Nebula → Upgrade Ship → 
 test.describe('Error scenarios (POM)', () => {
   test('handles 404 gracefully', async ({ page }) => {
     const app = new AppPage(page)
-    const response = await page.goto('/nonexistent-page')
+    const response = await page.goto('/nonexistent-page', { waitUntil: 'domcontentloaded' })
     expect(response?.status()).toBe(200)
-    await expect(page.getByText(/not found/i).or(page.getByRole('heading'))).toBeVisible()
-    await expect(app.main).toBeVisible()
+    await expect(page.getByText(/not found/i).or(page.getByRole('heading'))).toBeVisible({
+      timeout: WAIT_TIMEOUTS.standard,
+    })
+    await expect(app.main).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('page loads without console errors', async ({ page }) => {
@@ -146,26 +154,26 @@ test.describe('Mobile viewport critical paths (POM)', () => {
   test('nebula page loads on mobile with POM', async ({ page }) => {
     const nebula = new NebulaPage(page)
     await nebula.goto()
-    await expect(page.getByRole('main')).toBeVisible()
+    await expect(page.getByRole('main')).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
     await nebula.waitForCanvas()
-    await expect(nebula.canvas).toBeVisible()
+    await expect(nebula.canvas).toBeVisible({ timeout: WAIT_TIMEOUTS.slow })
   })
 
   test('marketplace mobile flow', async ({ page }) => {
     const market = new MarketplacePage(page)
     await market.goto()
     await market.waitForReady()
-    await expect(market.heading).toBeVisible()
+    await expect(market.heading).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
     await market.switchToBuy()
-    await expect(market.submitButton).toBeVisible()
+    await expect(market.submitButton).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('ship dashboard mobile flow', async ({ page }) => {
     const ship = new ShipPage(page)
     await ship.goto()
     await ship.waitForReady()
-    await expect(ship.fleetSection).toBeVisible()
-    await expect(ship.openUpgradeBayButton).toBeVisible()
+    await expect(ship.fleetSection).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+    await expect(ship.openUpgradeBayButton).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 })
 
@@ -173,9 +181,9 @@ test.describe('Accessibility — critical paths', () => {
   test('all main routes have accessible main landmark', async ({ page }) => {
     const app = new AppPage(page)
     for (const path of ['/', '/nebula', '/dashboard', '/marketplace']) {
-      await page.goto(path)
-      await expect(page.getByRole('main')).toBeVisible()
-      await expect(page.getByRole('banner')).toBeVisible()
+      await gotoStable(page, path)
+      await expect(page.getByRole('main')).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+      await expect(page.getByRole('banner')).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
       await expect(app.skipLink).toBeAttached()
     }
   })

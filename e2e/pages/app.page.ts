@@ -1,4 +1,5 @@
-import type { Page, Locator } from '@playwright/test'
+import { expect, type Page, type Locator } from '@playwright/test'
+import { gotoStable, waitForNetworkIdleSafe, WAIT_TIMEOUTS } from '../helpers/wait-helpers'
 
 export class AppPage {
   readonly page: Page
@@ -36,8 +37,7 @@ export class AppPage {
   }
 
   async goto(path = '/') {
-    await this.page.goto(path)
-    await this.page.waitForLoadState('networkidle')
+    await gotoStable(this.page, path)
   }
 
   async navigateTo(route: 'home' | 'nebula' | 'ship' | 'market' | 'leaderboard') {
@@ -47,9 +47,21 @@ export class AppPage {
       ship: this.shipLink,
       market: this.marketLink,
       leaderboard: this.leaderboardLink,
+    } as const
+    const expectedUrl: Record<typeof route, RegExp | string> = {
+      home: '/',
+      nebula: /\/nebula/,
+      ship: /\/dashboard/,
+      market: /\/marketplace/,
+      leaderboard: /\/leaderboard/,
     }
-    await linkMap[route].click()
-    await this.page.waitForLoadState('networkidle')
+    const link = linkMap[route]
+    await link.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
+    await link.click()
+    // Wait for SPA route change to commit before waiting on network/main.
+    await expect(this.page).toHaveURL(expectedUrl[route], { timeout: WAIT_TIMEOUTS.standard })
+    await waitForNetworkIdleSafe(this.page)
+    await this.main.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
   }
 
   async openMobileMenuIfVisible() {
@@ -76,7 +88,7 @@ export class AppPage {
     return errors
   }
 
-  async waitForMainVisible(timeout = 10000) {
+  async waitForMainVisible(timeout = WAIT_TIMEOUTS.standard) {
     await this.main.waitFor({ state: 'visible', timeout })
   }
 }

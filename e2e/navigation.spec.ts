@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { AppPage } from './pages/app.page'
+import { gotoStable, WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 test.describe('Navigation', () => {
   test('loads the home page', async ({ page }) => {
@@ -7,28 +8,35 @@ test.describe('Navigation', () => {
     await app.goto()
 
     await expect(page).toHaveTitle(/stellar nebula/i)
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
+      timeout: WAIT_TIMEOUTS.standard,
+    })
+    await expect(app.main).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('navigates to all main routes', async ({ page }) => {
     const app = new AppPage(page)
     await app.goto()
 
-    await app.nebulaLink.click()
-    await expect(page).toHaveURL(/\/nebula/)
+    // navigateTo() waits for the URL commit + network idle + <main> visible,
+    // so each route settles before the next click (no arbitrary sleeps).
+    await app.navigateTo('nebula')
+    await expect(page).toHaveURL(/\/nebula/, { timeout: WAIT_TIMEOUTS.standard })
 
-    await app.shipLink.click()
-    await expect(page).toHaveURL(/\/dashboard/)
+    await app.navigateTo('ship')
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: WAIT_TIMEOUTS.standard })
 
-    await app.marketLink.click()
-    await expect(page).toHaveURL(/\/marketplace/)
+    await app.navigateTo('market')
+    await expect(page).toHaveURL(/\/marketplace/, { timeout: WAIT_TIMEOUTS.standard })
 
-    await app.homeLink.click()
-    await expect(page).toHaveURL('/')
+    await app.navigateTo('home')
+    await expect(page).toHaveURL('/', { timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('shows 404 for unknown routes', async ({ page }) => {
-    await page.goto('/this-route-does-not-exist')
-    await expect(page.getByText(/not found/i)).toBeVisible()
+    await gotoStable(page, '/this-route-does-not-exist', { waitForMain: false })
+    await expect(page.getByText(/not found/i)).toBeVisible({
+      timeout: WAIT_TIMEOUTS.standard,
+    })
   })
 })

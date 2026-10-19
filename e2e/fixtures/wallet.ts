@@ -1,4 +1,5 @@
 import { test as base, type Page } from '@playwright/test'
+import { WAIT_TIMEOUTS } from '../helpers/wait-helpers'
 
 export type WalletFixtures = {
   mockWalletInstalled: void
@@ -37,7 +38,13 @@ export const test = base.extend<WalletFixtures>({
 export { expect } from '@playwright/test'
 
 export async function connectWallet(page: Page) {
-  await page.getByRole('button', { name: /connect wallet/i }).click()
-  await page.getByRole('button', { name: /freighter/i }).click()
-  await page.waitForSelector('[data-testid="wallet-connected"]', { timeout: 10000 })
+  const connectButton = page.getByRole('button', { name: /connect wallet/i })
+  await connectButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
+  await connectButton.click()
+  const freighterButton = page.getByRole('button', { name: /freighter/i })
+  await freighterButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
+  await freighterButton.click()
+  await page
+    .locator('[data-testid="wallet-connected"]')
+    .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.slow })
 }

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { ShipPage } from './pages/ship.page'
 import { AppPage } from './pages/app.page'
+import { WAIT_TIMEOUTS } from './helpers/wait-helpers'
 
 /**
  * End-to-end test suite for the ship upgrade flow (#342).
@@ -20,8 +21,8 @@ test.describe('Ship upgrade operations (POM)', () => {
   test('loads the ship dashboard interface', async () => {
     await ship.goto()
     await ship.waitForReady()
-    await expect(ship.page.getByRole('main')).toBeVisible()
-    await expect(ship.fleetSection).toBeVisible()
+    await expect(ship.page.getByRole('main')).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
+    await expect(ship.fleetSection).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('displays wallet prompt or fleet management view when visited', async () => {
@@ -37,8 +38,8 @@ test.describe('Ship upgrade operations (POM)', () => {
   test('navigates to ship dashboard from primary navigation', async ({ page }) => {
     await app.goto('/')
     await app.navigateTo('ship')
-    await expect(page).toHaveURL(/\/dashboard/)
-    await expect(ship.fleetSection).toBeVisible()
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: WAIT_TIMEOUTS.standard })
+    await expect(ship.fleetSection).toBeVisible({ timeout: WAIT_TIMEOUTS.standard })
   })
 
   test('displays fleet inventory and active upgrade queue', async () => {

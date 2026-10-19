@@ -1,4 +1,10 @@
-import type { Page, Locator } from '@playwright/test'
+import { expect, type Page, type Locator } from '@playwright/test'
+import {
+  gotoStable,
+  waitForAnyVisible,
+  waitForCanvasReady,
+  WAIT_TIMEOUTS,
+} from '../helpers/wait-helpers'
 
 export class NebulaPage {
   readonly page: Page
@@ -30,25 +36,26 @@ export class NebulaPage {
   }
 
   async goto() {
-    await this.page.goto('/nebula')
-    await this.page.waitForLoadState('networkidle')
+    await gotoStable(this.page, '/nebula')
   }
 
-  async waitForCanvas(timeout = 15000) {
-    await this.canvas.waitFor({ state: 'visible', timeout })
+  async waitForCanvas(timeout = WAIT_TIMEOUTS.slow) {
+    await waitForCanvasReady(this.canvas, timeout)
   }
 
   async waitForPageReady() {
-    await this.page.getByRole('main').waitFor({ state: 'visible' })
+    await this.page.getByRole('main').waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
     await this.waitForCanvas().catch(() => {})
   }
 
   async getVisibleAction(): Promise<'connect' | 'scan' | 'none'> {
-    // Wait a bit for either to appear
-    await Promise.race([
-      this.connectPrompt.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {}),
-      this.scanButton.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {}),
-    ])
+    // Wait for either divergent state to resolve instead of racing raw waits.
+    const winner = await waitForAnyVisible(
+      [this.connectPrompt, this.scanButton],
+      WAIT_TIMEOUTS.standard
+    ).catch(() => -1)
+    if (winner === 0) return 'connect'
+    if (winner === 1) return 'scan'
     if (await this.connectPrompt.isVisible().catch(() => false)) return 'connect'
     if (await this.scanButton.isVisible().catch(() => false)) return 'scan'
     return 'none'
@@ -65,8 +72,11 @@ export class NebulaPage {
     // Fallback: click canvas center
     await this.waitForCanvas()
     await this.clickCanvasAt(200, 200)
-    // Wait for potential reward update
-    await this.page.waitForTimeout(800)
+    // Wait for the scan to settle: harvest panels stay visible and any
+    // in-flight reward update resolves. Explicit visibility instead of sleep.
+    await expect(this.harvestLog.first().or(this.inventory.first())).toBeVisible({
+      timeout: WAIT_TIMEOUTS.standard,
+    })
   }
 
   async getHarvestTotals() {
@@ -89,7 +99,12 @@ export class NebulaPage {
     const btn = this.page.getByRole('button', {
       name: new RegExp(`filter resources by ${filter}`, 'i'),
     })
+    await btn.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
     await btn.click()
+    // Wait for the pressed state to settle instead of assuming instant update.
+    await expect(btn).toHaveAttribute('aria-pressed', 'true', {
+      timeout: WAIT_TIMEOUTS.standard,
+    })
   }
 
   async isInventoryVisible() {

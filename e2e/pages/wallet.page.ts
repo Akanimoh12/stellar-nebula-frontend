@@ -1,4 +1,5 @@
 import type { Page, Locator } from '@playwright/test'
+import { gotoStable, WAIT_TIMEOUTS } from '../helpers/wait-helpers'
 
 export class WalletPage {
   readonly page: Page
@@ -32,12 +33,13 @@ export class WalletPage {
   }
 
   async goto(path = '/') {
-    await this.page.goto(path)
+    await gotoStable(this.page, path)
   }
 
   async openConnectModal() {
+    await this.connectButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
     await this.connectButton.click()
-    await this.dialog.waitFor({ state: 'visible' })
+    await this.dialog.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
   }
 
   async closeConnectModal() {
@@ -46,7 +48,9 @@ export class WalletPage {
     } else {
       await this.page.keyboard.press('Escape')
     }
-    await this.dialog.waitFor({ state: 'hidden' }).catch(() => {})
+    await this.dialog
+      .waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.standard })
+      .catch(() => {})
   }
 
   async selectFreighter() {
@@ -59,11 +63,15 @@ export class WalletPage {
 
   async connectWithFreighter() {
     await this.openConnectModal()
+    await this.freighterButton.waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.standard })
     await this.selectFreighter()
-    // Wait for either connected indicator or dialog disappears
+    // Wait for either connected indicator or dialog dismissal. Both are valid
+    // terminal states; poll explicitly instead of racing bare waits.
     await Promise.race([
-      this.walletConnectedIndicator.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {}),
-      this.dialog.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {}),
+      this.walletConnectedIndicator
+        .waitFor({ state: 'visible', timeout: WAIT_TIMEOUTS.slow })
+        .catch(() => {}),
+      this.dialog.waitFor({ state: 'hidden', timeout: WAIT_TIMEOUTS.slow }).catch(() => {}),
     ])
   }
 

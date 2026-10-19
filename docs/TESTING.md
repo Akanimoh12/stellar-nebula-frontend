@@ -87,3 +87,13 @@ npm run test:coverage
 - If a test _must_ seed storage, do so in its own `beforeEach` or inline setup — it will be cleared after the test completes.
 - You may still call `localStorage.clear()` explicitly if a test wants a clean slate at a precise point _within_ its body, but there is no need to add it to `beforeEach` / `afterEach` — the global hook handles it.
 
+
+## Speeding Up the Test Suite (#427)
+
+The unit project in `vitest.config.ts` already runs test files in parallel. To keep local runs fast:
+
+- Run only the files you changed, for example `npx vitest run src/services`.
+- Use `npx vitest` (watch mode) during development instead of repeated full runs.
+- Keep tests off the network. MSW (`src/test/mocks/server.ts`) and module mocks such as `vi.mock('@stellar/stellar-sdk')` avoid real I/O.
+- Avoid real timers. Use `vi.useFakeTimers()` for debounce, retry, and polling logic.
+- Keep the integration and storybook projects out of the default run. `npm test` already excludes storybook.

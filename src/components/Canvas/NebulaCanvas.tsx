@@ -21,6 +21,11 @@ import { rollScanReward, rollResourceAmount } from '@/utils/rarity'
 import { createRNG } from '@/utils/procedural/nebula'
 import { SCAN_COOLDOWN_MS, SCAN_CHANNEL_DURATION_SEC } from '@/constants/game'
 import type { ResourceType, RarityTier } from '@/types/game'
+import { SCAN_POINTS_META } from './scanPoints'
+import { ScanPointControls } from './ScanPointControls'
+import { CanvasLiveRegion, CanvasSkipLink } from './CanvasStatusLayer'
+import { useDeviceHints } from './useDeviceHints'
+import { useScanPointKeyboardNav } from './useScanPointKeyboardNav'
 
 function CanvasResourceCleanup() {
   const { gl, scene } = useThree()
@@ -40,43 +45,6 @@ export interface NebulaCanvasProps {
   reducedMotion?: boolean
   onScanComplete?: (resourceType: ResourceType, amount: number, pointId: string) => void
 }
-
-const SCAN_POINTS_META: Array<{
-  id: string
-  position: [number, number, number]
-  resourceType: ResourceType
-  resourceAmount: number
-  label: string
-}> = [
-  {
-    id: 'scan-1',
-    position: [2.2, 0.2, 0.4],
-    resourceType: 'nebulite',
-    resourceAmount: 50,
-    label: 'Nebulite Deposit',
-  },
-  {
-    id: 'scan-2',
-    position: [-1.9, 0.8, -0.2],
-    resourceType: 'stellarium',
-    resourceAmount: 30,
-    label: 'Stellarium Cluster',
-  },
-  {
-    id: 'scan-3',
-    position: [0.9, -1.8, 0.6],
-    resourceType: 'voidcrystal',
-    resourceAmount: 40,
-    label: 'Voidcrystal Formation',
-  },
-  {
-    id: 'scan-4',
-    position: [-0.7, 1.7, -0.5],
-    resourceType: 'darkMatter',
-    resourceAmount: 25,
-    label: 'Dark Matter Anomaly',
-  },
-]
 
 function createInitialRng() {
   return createRNG(Date.now())
@@ -119,26 +87,7 @@ function NebulaCanvas({
     // getRemainingSeconds is stable when scanCooldowns haven't changed
   }, [getRemainingSeconds])
 
-  const deviceHints = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return {
-        isMobile: false,
-      }
-    }
-
-    const nav = navigator as Navigator & {
-      userAgentData?: {
-        mobile?: boolean
-      }
-    }
-
-    return {
-      isMobile:
-        window.matchMedia('(pointer: coarse)').matches ||
-        window.matchMedia('(max-width: 768px)').matches ||
-        nav.userAgentData?.mobile === true,
-    }
-  }, [])
+  const deviceHints = useDeviceHints()
 
   const handleScan = useCallback(
     (pointId: string, resourceType: ResourceType, amount: number) => {
@@ -188,81 +137,13 @@ function NebulaCanvas({
     [canScan, getRemainingSeconds, startCooldown, onScanComplete]
   )
 
-  const handleWrapperKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>) => {
-      // Handle Enter / Space to scan focused point
-      if ((event.key === 'Enter' || event.key === ' ') && focusedPointId) {
-        event.preventDefault()
-        const point = SCAN_POINTS_META.find((p) => p.id === focusedPointId)
-        if (point) {
-          handleScan(point.id, point.resourceType, point.resourceAmount)
-        }
-        return
-      }
-
-      // Arrow keys for focus navigation between scan points when a point is focused
-      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-        // If focus is on wrapper itself (not on a button), cycle to next point
-        const active = document.activeElement
-        const isButtonFocused = SCAN_POINTS_META.some(
-          (p) => active?.getAttribute('data-scan-id') === p.id
-        )
-        if (!isButtonFocused && wrapperRef.current?.contains(active)) {
-          // Only intercept if wrapper contains focus but not button -> let CameraControls handle orbit
-          return
-        }
-        if (isButtonFocused) {
-          event.preventDefault()
-          const currentIdx = SCAN_POINTS_META.findIndex((p) => p.id === focusedPointId)
-          const nextIdx = (currentIdx + 1) % SCAN_POINTS_META.length
-          const nextId = SCAN_POINTS_META[nextIdx].id
-          setFocusedPointId(nextId)
-          const nextBtn = wrapperRef.current?.querySelector<HTMLButtonElement>(
-            `[data-scan-id="${nextId}"]`
-          )
-          nextBtn?.focus()
-        }
-      }
-
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-        const active = document.activeElement
-        const isButtonFocused = SCAN_POINTS_META.some(
-          (p) => active?.getAttribute('data-scan-id') === p.id
-        )
-        if (isButtonFocused) {
-          event.preventDefault()
-          const currentIdx = SCAN_POINTS_META.findIndex((p) => p.id === focusedPointId)
-          const prevIdx = (currentIdx - 1 + SCAN_POINTS_META.length) % SCAN_POINTS_META.length
-          const prevId = SCAN_POINTS_META[prevIdx].id
-          setFocusedPointId(prevId)
-          const prevBtn = wrapperRef.current?.querySelector<HTMLButtonElement>(
-            `[data-scan-id="${prevId}"]`
-          )
-          prevBtn?.focus()
-        }
-      }
-
-      // Home / End to jump to first/last
-      if (event.key === 'Home' && focusedPointId) {
-        event.preventDefault()
-        const firstId = SCAN_POINTS_META[0].id
-        setFocusedPointId(firstId)
-        wrapperRef.current?.querySelector<HTMLButtonElement>(`[data-scan-id="${firstId}"]`)?.focus()
-      }
-      if (event.key === 'End' && focusedPointId) {
-        event.preventDefault()
-        const lastId = SCAN_POINTS_META[SCAN_POINTS_META.length - 1].id
-        setFocusedPointId(lastId)
-        wrapperRef.current?.querySelector<HTMLButtonElement>(`[data-scan-id="${lastId}"]`)?.focus()
-      }
-
-      if (event.key.toLowerCase() === 'p' && !event.ctrlKey && !event.metaKey && !event.altKey) {
-        event.preventDefault()
-        togglePause()
-      }
-    },
-    [focusedPointId, handleScan, togglePause]
-  )
+  const handleWrapperKeyDown = useScanPointKeyboardNav({
+    wrapperRef,
+    focusedPointId,
+    setFocusedPointId,
+    onScan: handleScan,
+    onTogglePause: togglePause,
+  })
 
   // Clear live message after a delay for screen readers
   useEffect(() => {
@@ -375,152 +256,22 @@ function NebulaCanvas({
       />
 
       {/* Keyboard-accessible scan controls overlay - visible for keyboard navigation */}
-      <div
-        className="nebula-keyboard-controls"
-        role="group"
-        aria-label="Scan points - press Tab to navigate, Enter to scan"
-        style={{
-          position: 'absolute',
-          bottom: '1rem',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: '0.5rem',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          zIndex: 5,
-          pointerEvents: 'auto',
-        }}
-      >
-        {SCAN_POINTS_META.map((point) => {
-          const remaining = remainingSecondsMap[point.id] || 0
-          const isOnCooldown = remaining > 0
-          const isScanning = scanningPoints.has(point.id)
-          const isFocused = focusedPointId === point.id
-          const isDisabled = isOnCooldown || isScanning
-
-          return (
-            <button
-              key={point.id}
-              type="button"
-              data-scan-id={point.id}
-              tabIndex={0}
-              aria-label={
-                isScanning
-                  ? `Scanning ${point.label}... please wait`
-                  : isOnCooldown
-                    ? `${point.label} on cooldown, ${remaining} seconds remaining`
-                    : `Scan ${point.label} for ${point.resourceAmount} ${point.resourceType}. Press Enter to scan.`
-              }
-              aria-pressed={isScanning}
-              aria-disabled={isDisabled}
-              disabled={isDisabled}
-              onFocus={() => setFocusedPointId(point.id)}
-              onBlur={() => {
-                // Delay to allow focus to move to next button
-                setTimeout(() => {
-                  const active = document.activeElement?.getAttribute('data-scan-id')
-                  if (!active) setFocusedPointId(null)
-                }, 0)
-              }}
-              onClick={() => handleScan(point.id, point.resourceType, point.resourceAmount)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  handleScan(point.id, point.resourceType, point.resourceAmount)
-                }
-              }}
-              className={`nebula-scan-button touch-target ${isFocused ? 'is-focused' : ''} ${isDisabled ? 'is-disabled' : ''}`}
-              style={{
-                padding: '0.5rem 0.75rem',
-                borderRadius: '999px',
-                border: isFocused ? '3px solid #32d6a5' : '2px solid rgba(159, 216, 255, 0.3)',
-                background: isScanning
-                  ? 'rgba(34, 197, 94, 0.25)'
-                  : isOnCooldown
-                    ? 'rgba(75, 85, 99, 0.6)'
-                    : isFocused
-                      ? 'rgba(50, 214, 165, 0.25)'
-                      : 'rgba(10, 16, 32, 0.85)',
-                color: isOnCooldown ? '#9ca3af' : '#f8fbff',
-                fontSize: '0.8rem',
-                fontWeight: 700,
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                outline: 'none',
-                boxShadow: isFocused
-                  ? '0 0 0 3px rgba(50, 214, 165, 0.4), 0 4px 12px rgba(0,0,0,0.3)'
-                  : '0 2px 8px rgba(0,0,0,0.2)',
-                transform: isFocused && !isMotionReduced ? 'scale(1.05)' : 'scale(1)',
-                transition: isMotionReduced ? 'none' : 'all 160ms ease',
-                minHeight: '44px',
-                minWidth: '44px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.35rem',
-                opacity: isOnCooldown ? 0.7 : 1,
-              }}
-            >
-              <span aria-hidden="true">{isScanning ? '◉' : isOnCooldown ? '◐' : '◎'}</span>
-              <span>{point.id}</span>
-              {isOnCooldown && <span aria-hidden="true">({remaining}s)</span>}
-              {isScanning && <span aria-hidden="true">...</span>}
-            </button>
-          )
-        })}
-      </div>
+      <ScanPointControls
+        points={SCAN_POINTS_META}
+        remainingSecondsMap={remainingSecondsMap}
+        scanningPoints={scanningPoints}
+        focusedPointId={focusedPointId}
+        isMotionReduced={isMotionReduced}
+        onFocusPoint={(pointId) => setFocusedPointId(pointId)}
+        onClearFocus={() => setFocusedPointId(null)}
+        onScan={(point) => handleScan(point.id, point.resourceType, point.resourceAmount)}
+      />
 
       {/* Skip link for keyboard users to bypass canvas */}
-      <a
-        href="#nebula-scan-results"
-        className="sr-only focus:not-sr-only"
-        style={{
-          position: 'absolute',
-          top: '0.5rem',
-          left: '0.5rem',
-          zIndex: 10,
-          padding: '0.5rem 0.75rem',
-          background: '#32d6a5',
-          color: '#07111f',
-          borderRadius: '6px',
-          fontWeight: 700,
-          textDecoration: 'none',
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.position = 'absolute'
-          e.currentTarget.style.clip = 'auto'
-          e.currentTarget.style.width = 'auto'
-          e.currentTarget.style.height = 'auto'
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.position = 'absolute'
-          e.currentTarget.style.clip = 'rect(0, 0, 0, 0)'
-          e.currentTarget.style.width = '1px'
-          e.currentTarget.style.height = '1px'
-        }}
-      >
-        Skip nebula canvas
-      </a>
+      <CanvasSkipLink />
 
       {/* Live region for screen readers */}
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-        style={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          padding: 0,
-          margin: '-1px',
-          overflow: 'hidden',
-          clip: 'rect(0, 0, 0, 0)',
-          whiteSpace: 'nowrap',
-          border: 0,
-        }}
-      >
-        {liveMessage}
-      </div>
+      <CanvasLiveRegion message={liveMessage} />
     </div>
   )
 }

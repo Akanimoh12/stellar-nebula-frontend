@@ -64,7 +64,13 @@ export default defineConfig([
   },
   {
     // The logger is the one place that wraps console, and tests may inspect it directly.
-    files: ['src/services/logging.ts', '**/__tests__/**', '**/*.test.{ts,tsx}', 'test/**', 'e2e/**'],
+    files: [
+      'src/services/logging.ts',
+      '**/__tests__/**',
+      '**/*.test.{ts,tsx}',
+      'test/**',
+      'e2e/**',
+    ],
     rules: {
       'no-console': 'off',
     },

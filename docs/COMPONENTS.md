@@ -128,3 +128,28 @@ export function ActionToolbar() {
   )
 }
 ```
+
+## Large Component Structure
+
+Large screens are split so each file has one responsibility and stays under 300 lines.
+
+### Nebula canvas (`src/components/Canvas/`)
+
+| File                         | Responsibility                                                   |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `NebulaCanvas.tsx`           | Composes the 3D scene, scan state, and cooldown handling         |
+| `scanPoints.ts`              | Scan point metadata (ids, positions, resource types and amounts) |
+| `ScanPointControls.tsx`      | Keyboard-accessible scan buttons overlaid on the canvas          |
+| `useScanPointKeyboardNav.ts` | Keyboard navigation: Enter/Space to scan, arrows, Home/End, P    |
+| `useDeviceHints.ts`          | Coarse mobile detection used to pick cheaper render settings     |
+| `CanvasStatusLayer.tsx`      | Skip link and polite live region for screen readers              |
+
+### Ship dashboard (`src/components/Dashboard/`)
+
+| File                              | Responsibility                                                       |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `ShipDashboard.tsx`               | Page layout, fleet seeding, and derived fleet metrics                |
+| `useShipUpgradeFlow.ts`           | Upgrade bay state and both upgrade paths (local and contract)        |
+| `ContractUpgradeConfirmModal.tsx` | Pre-sign review of a simulated on-chain upgrade                      |
+| `ShipCard.tsx`                    | A single selectable ship in the fleet list                           |
+| `dashboardData.ts`                | Demo ships and inventory, and the `hasResources` affordability check |

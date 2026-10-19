@@ -1,5 +1,10 @@
 import * as StellarSdk from '@stellar/stellar-sdk'
 import { createHorizonServer, getActiveStellarConfig } from '@/config/stellar'
+import {
+  EVENT_STREAM_PAGE_LIMIT,
+  EVENT_STREAM_RECONNECT_BASE_DELAY_MS,
+  EVENT_STREAM_RECONNECT_MAX_DELAY_MS,
+} from '@/constants/app'
 
 export type ContractEventType = 'ScanCompleted' | 'ShipUpgraded' | 'ResourceMinted' | 'Unknown'
 
@@ -117,8 +122,8 @@ export function startContractEventListener(options: ContractEventListenerOptions
   let pollingHandle: ReturnType<typeof setInterval> | null = null
   // Horizon's SSE connection drops periodically; reconnect with exponential
   // backoff so the stream heals on its own instead of silently going dead.
-  const reconnectBaseDelayMs = 1000
-  const reconnectMaxDelayMs = 30_000
+  const reconnectBaseDelayMs = EVENT_STREAM_RECONNECT_BASE_DELAY_MS
+  const reconnectMaxDelayMs = EVENT_STREAM_RECONNECT_MAX_DELAY_MS
   let reconnectAttempt = 0
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let closeStream: (() => void) | null = null
@@ -133,7 +138,7 @@ export function startContractEventListener(options: ContractEventListenerOptions
 
       const response = await rpc.getEvents({
         startLedger: latestLedger > 0 ? latestLedger + 1 : 0,
-        limit: 25,
+        limit: EVENT_STREAM_PAGE_LIMIT,
         ...(options.contractId
           ? {
               filters: [

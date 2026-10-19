@@ -8,6 +8,8 @@ import { useShipUpgrade } from '../../hooks/contracts/useShipUpgrade'
 import { useWallet } from '../../contexts/WalletContext'
 import { trackEvent } from '../../services/analytics'
 import { useTutorialStore } from '../../store/tutorialStore'
+import { UPGRADE_CONFIRMATION_DELAY_MS } from '../../constants/game'
+import { STELLAR_STROOPS_PER_XLM } from '../../constants/stellar'
 import {
   useResourceStore,
   useAchievementStore,
@@ -320,7 +322,7 @@ function ShipDashboard() {
     setIsUpgradeOpen(false)
 
     try {
-      await new Promise((resolve) => window.setTimeout(resolve, 700))
+      await new Promise((resolve) => window.setTimeout(resolve, UPGRADE_CONFIRMATION_DELAY_MS))
       confirmOptimisticShipUpdate(shipTxId)
       confirmOptimisticUpdate(resourceTxId)
       recordUpgradeCompleted({ upgradeId: upgrade.id, shipId: activeShip.id })
@@ -542,7 +544,7 @@ function ShipDashboard() {
         operationType="upgradeShip"
         estimatedFee={
           upgradeContract.simulation
-            ? `${(Number(upgradeContract.simulation.minResourceFee) / 10_000_000).toFixed(7)} XLM`
+            ? `${(Number(upgradeContract.simulation.minResourceFee) / STELLAR_STROOPS_PER_XLM).toFixed(7)} XLM`
             : 'Estimating…'
         }
         details={[

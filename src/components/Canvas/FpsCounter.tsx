@@ -3,6 +3,7 @@ import { useFrameRateMonitor } from '@/hooks/useFrameRateMonitor'
 import { useRenderStatsStore } from '@/store/renderStatsStore'
 import type { FpsBenchmarkSample } from '@/utils/performance/fpsBenchmark'
 import { trackEvent } from '@/services/analytics'
+import { TARGET_FPS } from '@/constants/app'
 
 /** Chrome-only, non-standard `performance.memory`; absent elsewhere. */
 interface PerformanceWithMemory extends Performance {
@@ -87,7 +88,7 @@ export function FpsCounter() {
 
   const { fps, averageFps } = useFrameRateMonitor({
     enabled: true,
-    targetFps: 60,
+    targetFps: TARGET_FPS,
     sampleWindowMs: 1000,
     onSample: handleSample,
   })

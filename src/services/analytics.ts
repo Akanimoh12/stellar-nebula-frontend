@@ -1,3 +1,5 @@
+import { ANALYTICS_BATCH_SIZE, ANALYTICS_FLUSH_INTERVAL_MS } from '@/constants/app'
+
 export type AnalyticsEventName =
   | 'scan_started'
   | 'scan_completed'
@@ -41,8 +43,8 @@ const ANALYTICS_OPT_OUT_KEY = 'stellar-nebula:analytics-opt-out'
 const DEFAULT_CONFIG: AnalyticsConfig = {
   enabled: true,
   endpoint: null,
-  batchSize: 10,
-  flushIntervalMs: 15_000,
+  batchSize: ANALYTICS_BATCH_SIZE,
+  flushIntervalMs: ANALYTICS_FLUSH_INTERVAL_MS,
 }
 
 const piiKeyPattern = /address|account|email|handle|name|publickey|secret|token|wallet/i

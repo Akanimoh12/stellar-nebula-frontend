@@ -77,8 +77,90 @@ Stellar Nebula supports hardware wallet authentication and transaction signing t
 
 ---
 
-## 5. Security Best Practices
+## 5. Direct Ledger Integration (#447)
+
+In addition to Freighter wallet integration, Stellar Nebula now includes native Ledger WebUSB support for direct device communication.
+
+### Direct Connection Features
+
+- **WebUSB Support**: Direct connection to Ledger devices without wallet intermediary
+- **Public Key Derivation**: BIP44 standard path `44'/148'/0'`
+- **Transaction Signing**: Full transaction signing with device confirmation
+- **Error Handling**: User-friendly error messages for common issues
+- **Multi-Network**: Supports Testnet, Futurenet, and Mainnet
+
+### Using Direct Ledger Connection
+
+#### React Hook
+
+```typescript
+import { useLedger } from '@/hooks/useLedger'
+
+function Component() {
+  const ledger = useLedger({ network: 'mainnet' })
+
+  const handleConnect = async () => {
+    const publicKey = await ledger.connect()
+    console.log('Connected:', publicKey)
+  }
+
+  return <button onClick={handleConnect}>Connect Ledger</button>
+}
+```
+
+#### Pre-built Component
+
+```typescript
+import { LedgerConnect } from '@/components/LedgerConnect'
+
+function WalletSetup() {
+  return (
+    <LedgerConnect
+      network="mainnet"
+      onConnect={(publicKey) => console.log('Ready to sign')}
+      onError={(error) => console.error(error)}
+    />
+  )
+}
+```
+
+### Supported Devices
+
+- Ledger Nano S (firmware 1.6.0+)
+- Ledger Nano S Plus
+- Ledger Nano X
+- Ledger Flex
+
+### Browser Requirements
+
+| Browser | Support | Note |
+|---------|---------|------|
+| Chrome  | ✅ Yes  | Desktop only |
+| Edge    | ✅ Yes  | Desktop only |
+| Firefox | ❌ No   | WebUSB unavailable |
+| Safari  | ❌ No   | WebUSB unavailable |
+
+### Utilities
+
+```typescript
+// Check Ledger support
+import { checkLedgerSupport } from '@/utils/ledger-utils'
+const supported = await checkLedgerSupport()
+
+// Get device info
+import { getLedgerDeviceInfo } from '@/utils/ledger-utils'
+const info = await getLedgerDeviceInfo()
+
+// User-friendly error formatting
+import { formatLedgerError } from '@/utils/ledger-utils'
+const message = formatLedgerError(error)
+```
+
+---
+
+## 6. Security Best Practices
 
 - **Verify Recipient & Hash**: Always cross-check the transaction hash displayed on your Ledger screen against the transaction hash rendered by Stellar Nebula before pressing both buttons to confirm.
 - **Keep Firmware Updated**: Regularly update your Ledger device firmware and Stellar application via Ledger Live to ensure full compatibility with modern Soroban specifications.
 - **Session Auto-Disconnect**: Stellar Nebula automatically enforces a session timeout after inactivity to ensure your connected hardware session remains secure when unattended.
+- **Device Confirmation Required**: All transactions require explicit approval on the physical device. Never sign without reviewing the transaction details.

@@ -1,0 +1,236 @@
+.container {
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border, #eee);
+  padding-bottom: 12px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text, #000);
+}
+
+.warningBadge {
+  background: #ff6b6b;
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.content {
+  margin: 20px 0;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.section h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border, #f0f0f0);
+}
+
+.detailRow:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: var(--color-text-secondary, #666);
+  font-size: 13px;
+}
+
+.value {
+  color: var(--color-text, #000);
+  font-size: 13px;
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.feeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.feeCard {
+  padding: 12px;
+  background: var(--color-background, #f9f9f9);
+  border: 1px solid var(--color-border, #eee);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feeCard.highlighted {
+  background: var(--color-primary-light, #e8f5ff);
+  border-color: var(--color-primary, #0066cc);
+}
+
+.feeLabel {
+  font-size: 12px;
+  color: var(--color-text-secondary, #666);
+  font-weight: 500;
+}
+
+.feeAmount {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text, #000);
+  font-family: monospace;
+}
+
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border, #ddd);
+  border-top-color: var(--color-primary, #0066cc);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error {
+  padding: 12px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  color: #856404;
+}
+
+.error p {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+}
+
+.retryBtn {
+  padding: 6px 12px;
+  background: #ffc107;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.retryBtn:hover {
+  background: #ffb300;
+}
+
+.warningBox {
+  padding: 12px;
+  background: #fff3cd;
+  border-left: 3px solid #ff6b6b;
+  border-radius: 4px;
+  margin-top: 16px;
+}
+
+.warningBox p {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border, #eee);
+}
+
+.cancelBtn,
+.confirmBtn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelBtn {
+  background: var(--color-background, #f0f0f0);
+  color: var(--color-text, #000);
+  border: 1px solid var(--color-border, #ddd);
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: var(--color-border, #e0e0e0);
+}
+
+.confirmBtn {
+  background: var(--color-primary, #0066cc);
+  color: #fff;
+}
+
+.confirmBtn:hover:not(:disabled) {
+  background: var(--color-primary-dark, #0052a3);
+}
+
+.cancelBtn:disabled,
+.confirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .container {
+    background: var(--color-surface, #1a1a1a);
+    border-color: var(--color-border, #333);
+  }
+
+  .feeCard {
+    background: var(--color-background, #222);
+    border-color: var(--color-border, #333);
+  }
+
+  .header {
+    border-color: var(--color-border, #333);
+  }
+
+  .detailRow {
+    border-color: var(--color-border, #333);
+  }
+
+  .cancelBtn {
+    background: var(--color-background, #222);
+    border-color: var(--color-border, #333);
+  }
+}
